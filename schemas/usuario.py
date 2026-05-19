@@ -1,0 +1,1 @@
+# Regras de cadastro/login (ex: e-mail válido) [cite: 380]

@@ -1,0 +1,1 @@
+# Regras para novos pontos

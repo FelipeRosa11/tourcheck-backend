@@ -1,0 +1,1 @@
+# Modelo da tabela 'usuario' [cite: 376]

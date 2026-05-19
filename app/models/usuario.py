@@ -1,0 +1,1 @@
+# Modelo da tabela 'ponto_turistico' [cite: 395]
