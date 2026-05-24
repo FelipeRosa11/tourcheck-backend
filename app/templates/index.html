@@ -1,18 +1,74 @@
 <!DOCTYPE html>
-<html Lang="pt">
+<html lang="pt">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>TourCheck</title>
     </head>
-    <header>
-        <button onclick="window.location.href='/ponto_cadastro'">Cadastrar Ponto Turístico</button>
-        <button onclick="window.location.href='/login'">Login</button>
-        <button onclick="window.location.href='/login'">Login</button>
-        <button onclick="window.location.href='/cadastro'">Registrar</button>
-    </header>
     <body>
+        <header>
+            <button onclick="window.location.href='/ponto_cadastro'">Cadastrar Ponto Turístico</button>
+            <span id="botoes-auth">
+                <button onclick="window.location.href='/login'">Login</button>
+                <button onclick="window.location.href='/cadastro'">Registrar</button>
+            </span>
+            <button id="btn-logout" style="display:none" onclick="logout()">Sair</button>
+        </header>
+
         <h1>Bem-vindo ao TourCheck!</h1>
         <p>Descubra os melhores pontos turísticos!</p>
+
+        <div id="lista-pontos"></div>
+
+        <script>
+            const token = localStorage.getItem('access_token')
+
+            // ajusta o header conforme o estado de login
+            if (token) {
+                document.getElementById('botoes-auth').style.display = 'none'
+                document.getElementById('btn-logout').style.display = 'inline'
+            }
+
+            function logout() {
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('tipo_usuario')
+                window.location.href = '/login'
+            }
+
+            // carrega os pontos turísticos
+            async function carregarPontos() {
+                try {
+                    const resposta = await fetch('/pontos-turisticos')
+                    const pontos = await resposta.json()
+
+                    const lista = document.getElementById('lista-pontos')
+
+                    if (pontos.length === 0) {
+                        lista.innerHTML = '<p>Nenhum ponto turístico encontrado.</p>'
+                        return
+                    }
+
+                    pontos.forEach(ponto => {
+                        const item = document.createElement('div')
+                        item.style.border = '1px solid #ccc'
+                        item.style.margin = '10px'
+                        item.style.padding = '10px'
+                        item.innerHTML = `
+                            <h3>${ponto.nome}</h3>
+                            <p><strong>Categoria:</strong> ${ponto.categoria}</p>
+                            <p><strong>Cidade:</strong> ${ponto.cidade} - ${ponto.bairro || ''}</p>
+                            <p>${ponto.descricao}</p>
+                            <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} (${ponto.total_avaliacoes} avaliações)</p>
+                            ${ponto.imagem_url ? `<img src="${ponto.imagem_url}" width="200">` : ''}
+                        `
+                        lista.appendChild(item)
+                    })
+                } catch (erro) {
+                    document.getElementById('lista-pontos').innerHTML = '<p>Erro ao carregar pontos.</p>'
+                }
+            }
+
+            carregarPontos()
+        </script>
     </body>
 </html>

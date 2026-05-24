@@ -172,3 +172,35 @@ def avaliar_ponto(
     db.commit()
     db.refresh(avaliacao)
     return avaliacao
+
+@router.patch("/{ponto_id}/rejeitar", response_model=PontoResponse)
+def rejeitar_ponto(
+    ponto_id: int,
+    db: Session = Depends(get_db),
+    _: Usuario = Depends(exigir_admin),
+) -> PontoResponse:
+    ponto = buscar_ponto_ou_404(db, ponto_id)
+    ponto.status = StatusPonto.REJEITADO
+    db.commit()
+    db.refresh(ponto)
+    return montar_ponto_response(ponto)
+
+@router.delete("/{ponto_id}/avaliacoes/{avaliacao_id}", status_code=status.HTTP_204_NO_CONTENT)
+def apagar_avaliacao(
+    ponto_id: int,
+    avaliacao_id: int,
+    db: Session = Depends(get_db),
+    _: Usuario = Depends(exigir_admin),
+):
+    avaliacao = (
+        db.query(Avaliacao)
+        .filter(Avaliacao.id == avaliacao_id, Avaliacao.ponto_id == ponto_id)
+        .first()
+    )
+    if avaliacao is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Avaliacao nao encontrada.",
+        )
+    db.delete(avaliacao)
+    db.commit()

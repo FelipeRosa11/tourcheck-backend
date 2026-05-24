@@ -7,15 +7,60 @@
     </head>
     <body>
         <h1>Login</h1>
-        <form action="/auth/login" method="post">
+
+        <form id="form-login">
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
             <br><br>
+
             <label for="senha">Senha:</label>
-            <input type="password" id="senha" name="senha" required>
+            <input type="password" id="senha" name="senha" required minlength="6">
             <br><br>
+
             <button type="submit">Entrar</button>
-            <h1>Não tem uma conta? <a href="/cadastro">Cadastro</a></h1>
         </form>
+
+        <h3>Não tem uma conta? <a href="/cadastro">Cadastro</a></h3>
+
+        <p id="mensagem"></p>
+
+        <script>
+            document.getElementById('form-login').addEventListener('submit', async function(e) {
+                e.preventDefault()
+
+                const dados = {
+                    email: document.getElementById('email').value,
+                    senha: document.getElementById('senha').value,
+                }
+
+                try {
+                    const resposta = await fetch('/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(dados)
+                    })
+
+                    const resultado = await resposta.json()
+
+                    if (resposta.ok) {
+                        // salva o token no localStorage para usar nas próximas requisições
+                        localStorage.setItem('access_token', resultado.access_token)
+                        localStorage.setItem('tipo_usuario', resultado.usuario.tipo)
+
+                        document.getElementById('mensagem').textContent = 'Login realizado com sucesso!'
+                        document.getElementById('mensagem').style.color = 'green'
+
+                        // redireciona para a página principal após 1 segundo
+                        setTimeout(() => window.location.href = '/', 1000)
+                    } else {
+                        document.getElementById('mensagem').textContent = resultado.detail || 'E-mail ou senha inválidos.'
+                        document.getElementById('mensagem').style.color = 'red'
+                    }
+                } catch (erro) {
+                    document.getElementById('mensagem').textContent = 'Erro de conexão com o servidor.'
+                    document.getElementById('mensagem').style.color = 'red'
+                }
+            })
+        </script>
     </body>
 </html>

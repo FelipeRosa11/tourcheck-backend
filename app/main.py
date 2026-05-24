@@ -2,6 +2,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
 
 from app.database import init_db
 from app.routers import auth, pontos, pages
@@ -35,3 +38,9 @@ app.include_router(pages.router)
 @app.get("/")
 def read_root():
     return {"status": "TourCheck API funcionando com sucesso!"}
+
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
