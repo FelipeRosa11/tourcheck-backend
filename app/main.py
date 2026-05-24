@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routers import auth, pontos
+from app.routers import auth, pontos, pages
 
 
 @asynccontextmanager
@@ -30,7 +30,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(pontos.router)
-
+app.include_router(pages.router)
 
 @app.get("/")
 def read_root():
