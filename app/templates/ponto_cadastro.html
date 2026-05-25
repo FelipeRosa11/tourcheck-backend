@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Ponto Turístico - TourCheck</title>
+</head>
+<body>
+    <h1>Cadastro de Ponto Turístico</h1>
+
+    <form id="form-ponto">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" required>
+        <br><br>
+
+        <label for="descricao">Descrição:</label>
+        <input type="text" id="descricao" required>
+        <br><br>
+
+        <label for="categoria">Categoria:</label>
+        <input type="text" id="categoria" required>
+        <br><br>
+
+        <label for="cidade">Cidade:</label>
+        <input type="text" id="cidade" required>
+        <br><br>
+
+        <label for="bairro">Bairro:</label>
+        <input type="text" id="bairro">
+        <br><br>
+
+        <label for="endereco">Endereço:</label>
+        <input type="text" id="endereco">
+        <br><br>
+
+        <label for="latitude">Latitude:</label>
+        <input type="number" step="any" id="latitude">
+        <br><br>
+
+        <label for="longitude">Longitude:</label>
+        <input type="number" step="any" id="longitude">
+        <br><br>
+
+        <label for="imagem_url">URL da Imagem:</label>
+        <input type="url" id="imagem_url" placeholder="https://...">
+        <br><br>
+
+        <button type="submit">Enviar</button>
+    </form>
+
+    <p id="mensagem"></p>
+
+    <script>
+        // se não estiver logado, manda para o login
+        const token = localStorage.getItem('access_token')
+        if (!token) {
+            window.location.href = '/login'
+        }
+
+        document.getElementById('form-ponto').addEventListener('submit', async function(e) {
+            e.preventDefault()
+
+            const dados = {
+                nome: document.getElementById('nome').value,
+                descricao: document.getElementById('descricao').value,
+                categoria: document.getElementById('categoria').value,
+                cidade: document.getElementById('cidade').value,
+                bairro: document.getElementById('bairro').value || null,
+                endereco: document.getElementById('endereco').value || null,
+                latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
+                longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null,
+                imagem_url: document.getElementById('imagem_url').value || null,
+            }
+
+            try {
+                const resposta = await fetch('/pontos-turisticos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(dados)
+                })
+
+                const resultado = await resposta.json()
+
+                if (resposta.ok) {
+                    document.getElementById('mensagem').textContent = 'Ponto enviado para aprovação com sucesso!'
+                    document.getElementById('mensagem').style.color = 'green'
+                    setTimeout(() => window.location.href = '/', 1500)
+                } else {
+                    document.getElementById('mensagem').textContent = resultado.detail || 'Erro ao cadastrar ponto.'
+                    document.getElementById('mensagem').style.color = 'red'
+                }
+            } catch (erro) {
+                document.getElementById('mensagem').textContent = 'Erro de conexão com o servidor.'
+                document.getElementById('mensagem').style.color = 'red'
+            }
+        })
+    </script>
+</body>
+</html>
