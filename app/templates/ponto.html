@@ -1,2 +1,78 @@
 <!DOCTYPE html>
-<html lang="pt"></html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ponto Turistico - TourCheck</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+        main { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+        a { color: #2563eb; }
+        .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
+        .panel img { width: 100%; max-height: 360px; object-fit: cover; background: #e5e7eb; }
+        .content { padding: 18px; }
+        .muted { color: #64748b; }
+        .status { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e5e7eb; font-size: 13px; }
+        #mensagem { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <main>
+        <a href="/">Voltar para pontos</a>
+        <p id="mensagem">Carregando ponto...</p>
+        <article id="ponto" class="panel" style="display:none"></article>
+    </main>
+
+    <script>
+        function escaparHtml(valor) {
+            const div = document.createElement('div')
+            div.textContent = valor || ''
+            return div.innerHTML
+        }
+
+        function obterIdDaUrl() {
+            const partes = window.location.pathname.split('/').filter(Boolean)
+            return partes[1]
+        }
+
+        async function carregarPonto() {
+            const id = obterIdDaUrl()
+            const mensagem = document.getElementById('mensagem')
+            const container = document.getElementById('ponto')
+
+            try {
+                const token = localStorage.getItem('access_token')
+                const resposta = await fetch(`/pontos/${id}`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                })
+                const ponto = await resposta.json()
+
+                if (!resposta.ok) {
+                    mensagem.textContent = ponto.detail || 'Ponto turistico nao encontrado.'
+                    return
+                }
+
+                document.title = `${ponto.nome} - TourCheck`
+                mensagem.style.display = 'none'
+                container.style.display = 'block'
+                container.innerHTML = `
+                    ${ponto.imagem_url ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}">` : ''}
+                    <div class="content">
+                        <h1>${escaparHtml(ponto.nome)}</h1>
+                        <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
+                        <p>${escaparHtml(ponto.descricao)}</p>
+                        ${ponto.endereco ? `<p><strong>Endereco:</strong> ${escaparHtml(ponto.endereco)}</p>` : ''}
+                        ${ponto.latitude !== null && ponto.longitude !== null ? `<p><strong>Coordenadas:</strong> ${ponto.latitude}, ${ponto.longitude}</p>` : ''}
+                        <p><strong>Avaliacao media:</strong> ${ponto.media_avaliacoes} (${ponto.total_avaliacoes} avaliacao/avaliacoes)</p>
+                        <span class="status">Status: ${escaparHtml(ponto.status)}</span>
+                    </div>
+                `
+            } catch (erro) {
+                mensagem.textContent = 'Erro de conexao com o servidor.'
+            }
+        }
+
+        carregarPonto()
+    </script>
+</body>
+</html>

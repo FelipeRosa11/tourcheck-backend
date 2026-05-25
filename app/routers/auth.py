@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
-from app.models.usuario import TelefoneUsuario, Usuario
+from app.models.usuario import TelefoneUsuario, TipoUsuario, Usuario
 from app.schemas.usuario import (
     TokenResponse,
     UsuarioCadastroInput,
@@ -28,6 +28,9 @@ def cadastrar_usuario(dados: UsuarioCadastroInput, db: Session = Depends(get_db)
         nome=dados.nome,
         email=email,
         senha_hash=gerar_hash_senha(dados.senha),
+        tipo=TipoUsuario.ADMIN
+        if db.query(Usuario).filter(Usuario.tipo == TipoUsuario.ADMIN).first() is None
+        else TipoUsuario.COMUM,
     )
     usuario.telefones = [
         TelefoneUsuario(tipo=telefone.tipo, numero=telefone.numero)

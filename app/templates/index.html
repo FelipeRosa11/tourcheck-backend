@@ -1,74 +1,140 @@
 <!DOCTYPE html>
-<html lang="pt">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TourCheck</title>
-    </head>
-    <body>
-        <header>
-            <button onclick="window.location.href='/ponto_cadastro'">Cadastrar Ponto Turístico</button>
-            <span id="botoes-auth">
-                <button onclick="window.location.href='/login'">Login</button>
-                <button onclick="window.location.href='/cadastro'">Registrar</button>
-            </span>
-            <button id="btn-logout" style="display:none" onclick="logout()">Sair</button>
-        </header>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TourCheck</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+        header { display: flex; gap: 12px; align-items: center; padding: 16px 24px; background: #ffffff; border-bottom: 1px solid #d9e0ea; }
+        main { max-width: 1040px; margin: 0 auto; padding: 28px 20px; }
+        button, .button { border: 0; border-radius: 6px; padding: 10px 14px; background: #2563eb; color: white; cursor: pointer; text-decoration: none; font-size: 14px; }
+        button.secondary, .button.secondary { background: #e5e7eb; color: #111827; }
+        .toolbar { display: flex; gap: 10px; margin: 20px 0; }
+        .toolbar input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+        .card { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; }
+        .card img { width: 100%; height: 150px; object-fit: cover; background: #e5e7eb; }
+        .card-content { padding: 14px; }
+        .card h3 { margin: 0 0 8px; }
+        .muted { color: #64748b; }
+        .status { margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="button" href="/ponto_cadastro">Cadastrar Ponto</a>
+        <span id="botoes-auth">
+            <a class="button secondary" href="/login">Login</a>
+            <a class="button secondary" href="/cadastro">Registrar</a>
+        </span>
+        <a id="link-admin" class="button secondary" href="/admin" style="display:none">Admin</a>
+        <button id="btn-logout" class="secondary" style="display:none" onclick="logout()">Sair</button>
+    </header>
 
-        <h1>Bem-vindo ao TourCheck!</h1>
-        <p>Descubra os melhores pontos turísticos!</p>
+    <main>
+        <h1>TourCheck</h1>
+        <p class="muted">Descubra e cadastre pontos turisticos.</p>
 
-        <div id="lista-pontos"></div>
+        <form class="toolbar" id="form-busca">
+            <input type="search" id="busca" placeholder="Buscar por nome, cidade, bairro ou categoria">
+            <button type="submit">Buscar</button>
+        </form>
 
-        <script>
-            const token = localStorage.getItem('access_token')
+        <div id="status" class="status">Carregando pontos...</div>
+        <section id="lista-pontos" class="grid"></section>
+    </main>
 
-            // ajusta o header conforme o estado de login
-            if (token) {
-                document.getElementById('botoes-auth').style.display = 'none'
-                document.getElementById('btn-logout').style.display = 'inline'
-            }
+    <script>
+        const token = localStorage.getItem('access_token')
 
-            function logout() {
-                localStorage.removeItem('access_token')
-                localStorage.removeItem('tipo_usuario')
-                window.location.href = '/login'
-            }
+        if (token) {
+            document.getElementById('botoes-auth').style.display = 'none'
+            document.getElementById('btn-logout').style.display = 'inline'
+            verificarPerfil()
+        }
 
-            // carrega os pontos turísticos
-            async function carregarPontos() {
-                try {
-                    const resposta = await fetch('/pontos-turisticos')
-                    const pontos = await resposta.json()
+        function logout() {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('tipo_usuario')
+            window.location.href = '/login'
+        }
 
-                    const lista = document.getElementById('lista-pontos')
+        async function verificarPerfil() {
+            try {
+                const resposta = await fetch('/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                if (!resposta.ok) return
 
-                    if (pontos.length === 0) {
-                        lista.innerHTML = '<p>Nenhum ponto turístico encontrado.</p>'
-                        return
-                    }
+                const usuario = await resposta.json()
+                const tipo = String(usuario.tipo || '').toLowerCase()
+                localStorage.setItem('tipo_usuario', tipo)
 
-                    pontos.forEach(ponto => {
-                        const item = document.createElement('div')
-                        item.style.border = '1px solid #ccc'
-                        item.style.margin = '10px'
-                        item.style.padding = '10px'
-                        item.innerHTML = `
-                            <h3>${ponto.nome}</h3>
-                            <p><strong>Categoria:</strong> ${ponto.categoria}</p>
-                            <p><strong>Cidade:</strong> ${ponto.cidade} - ${ponto.bairro || ''}</p>
-                            <p>${ponto.descricao}</p>
-                            <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} (${ponto.total_avaliacoes} avaliações)</p>
-                            ${ponto.imagem_url ? `<img src="${ponto.imagem_url}" width="200">` : ''}
-                        `
-                        lista.appendChild(item)
-                    })
-                } catch (erro) {
-                    document.getElementById('lista-pontos').innerHTML = '<p>Erro ao carregar pontos.</p>'
+                if (tipo === 'admin') {
+                    document.getElementById('link-admin').style.display = 'inline'
                 }
+            } catch (erro) {
+                console.error('Nao foi possivel verificar perfil.', erro)
             }
+        }
 
-            carregarPontos()
-        </script>
-    </body>
+        function escaparHtml(valor) {
+            const div = document.createElement('div')
+            div.textContent = valor || ''
+            return div.innerHTML
+        }
+
+        async function carregarPontos(busca = '') {
+            const lista = document.getElementById('lista-pontos')
+            const status = document.getElementById('status')
+            lista.innerHTML = ''
+            status.textContent = 'Carregando pontos...'
+
+            try {
+                const params = new URLSearchParams()
+                if (busca) params.set('busca', busca)
+
+                const resposta = await fetch(`/pontos?${params.toString()}`)
+                const pontos = await resposta.json()
+
+                if (!resposta.ok) {
+                    status.textContent = pontos.detail || 'Erro ao carregar pontos.'
+                    return
+                }
+
+                if (pontos.length === 0) {
+                    status.textContent = 'Nenhum ponto turistico encontrado.'
+                    return
+                }
+
+                status.textContent = `${pontos.length} ponto(s) encontrado(s).`
+                pontos.forEach(ponto => {
+                    const item = document.createElement('article')
+                    item.className = 'card'
+                    item.innerHTML = `
+                        ${ponto.imagem_url ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}">` : ''}
+                        <div class="card-content">
+                            <h3>${escaparHtml(ponto.nome)}</h3>
+                            <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
+                            <p>${escaparHtml(ponto.descricao)}</p>
+                            <p><strong>Avaliacao:</strong> ${ponto.media_avaliacoes} (${ponto.total_avaliacoes})</p>
+                            <a class="button secondary" href="/ponto/${ponto.id}">Ver detalhes</a>
+                        </div>
+                    `
+                    lista.appendChild(item)
+                })
+            } catch (erro) {
+                status.textContent = 'Erro de conexao com o servidor.'
+            }
+        }
+
+        document.getElementById('form-busca').addEventListener('submit', function(event) {
+            event.preventDefault()
+            carregarPontos(document.getElementById('busca').value.trim())
+        })
+
+        carregarPontos()
+    </script>
+</body>
 </html>

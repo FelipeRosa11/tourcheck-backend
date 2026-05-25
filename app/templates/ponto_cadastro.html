@@ -1,79 +1,105 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Ponto Turístico - TourCheck</title>
+    <title>Cadastro de Ponto Turistico - TourCheck</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+        main { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
+        a { color: #2563eb; }
+        form { display: grid; gap: 14px; background: white; border: 1px solid #d9e0ea; border-radius: 8px; padding: 18px; }
+        label { display: grid; gap: 6px; font-weight: 600; }
+        input, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+        textarea { min-height: 110px; resize: vertical; }
+        .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        button { border: 0; border-radius: 6px; padding: 11px 16px; background: #2563eb; color: white; cursor: pointer; font-size: 15px; }
+        #mensagem { font-weight: 600; }
+    </style>
 </head>
 <body>
-    <h1>Cadastro de Ponto Turístico</h1>
+    <main>
+        <a href="/">Voltar para pontos</a>
+        <h1>Cadastro de Ponto Turistico</h1>
 
-    <form id="form-ponto">
-        <label for="nome">Nome:</label>
-        <input type="text" id="nome" required>
-        <br><br>
+        <form id="form-ponto">
+            <label>Nome
+                <input type="text" id="nome" required minlength="3" maxlength="120">
+            </label>
 
-        <label for="descricao">Descrição:</label>
-        <input type="text" id="descricao" required>
-        <br><br>
+            <label>Descricao
+                <textarea id="descricao" required minlength="10"></textarea>
+            </label>
 
-        <label for="categoria">Categoria:</label>
-        <input type="text" id="categoria" required>
-        <br><br>
+            <div class="row">
+                <label>Categoria
+                    <input type="text" id="categoria" required minlength="2" maxlength="60">
+                </label>
+                <label>Cidade
+                    <input type="text" id="cidade" required minlength="2" maxlength="80">
+                </label>
+            </div>
 
-        <label for="cidade">Cidade:</label>
-        <input type="text" id="cidade" required>
-        <br><br>
+            <div class="row">
+                <label>Bairro
+                    <input type="text" id="bairro" maxlength="80">
+                </label>
+                <label>Endereco
+                    <input type="text" id="endereco" maxlength="255">
+                </label>
+            </div>
 
-        <label for="bairro">Bairro:</label>
-        <input type="text" id="bairro">
-        <br><br>
+            <div class="row">
+                <label>Latitude
+                    <input type="number" step="any" id="latitude" min="-90" max="90">
+                </label>
+                <label>Longitude
+                    <input type="number" step="any" id="longitude" min="-180" max="180">
+                </label>
+            </div>
 
-        <label for="endereco">Endereço:</label>
-        <input type="text" id="endereco">
-        <br><br>
+            <label>URL da imagem
+                <input type="url" id="imagem_url" placeholder="https://...">
+            </label>
 
-        <label for="latitude">Latitude:</label>
-        <input type="number" step="any" id="latitude">
-        <br><br>
+            <button type="submit">Salvar ponto</button>
+        </form>
 
-        <label for="longitude">Longitude:</label>
-        <input type="number" step="any" id="longitude">
-        <br><br>
-
-        <label for="imagem_url">URL da Imagem:</label>
-        <input type="url" id="imagem_url" placeholder="https://...">
-        <br><br>
-
-        <button type="submit">Enviar</button>
-    </form>
-
-    <p id="mensagem"></p>
+        <p id="mensagem"></p>
+    </main>
 
     <script>
-        // se não estiver logado, manda para o login
         const token = localStorage.getItem('access_token')
         if (!token) {
             window.location.href = '/login'
         }
 
-        document.getElementById('form-ponto').addEventListener('submit', async function(e) {
-            e.preventDefault()
+        function valorOuNulo(id) {
+            const valor = document.getElementById(id).value.trim()
+            return valor || null
+        }
+
+        document.getElementById('form-ponto').addEventListener('submit', async function(event) {
+            event.preventDefault()
 
             const dados = {
-                nome: document.getElementById('nome').value,
-                descricao: document.getElementById('descricao').value,
-                categoria: document.getElementById('categoria').value,
-                cidade: document.getElementById('cidade').value,
-                bairro: document.getElementById('bairro').value || null,
-                endereco: document.getElementById('endereco').value || null,
-                latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
-                longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null,
-                imagem_url: document.getElementById('imagem_url').value || null,
+                nome: valorOuNulo('nome'),
+                descricao: valorOuNulo('descricao'),
+                categoria: valorOuNulo('categoria'),
+                cidade: valorOuNulo('cidade'),
+                bairro: valorOuNulo('bairro'),
+                endereco: valorOuNulo('endereco'),
+                latitude: valorOuNulo('latitude') ? parseFloat(valorOuNulo('latitude')) : null,
+                longitude: valorOuNulo('longitude') ? parseFloat(valorOuNulo('longitude')) : null,
+                imagem_url: valorOuNulo('imagem_url'),
             }
 
+            const mensagem = document.getElementById('mensagem')
+            mensagem.textContent = 'Salvando ponto...'
+            mensagem.style.color = '#1f2937'
+
             try {
-                const resposta = await fetch('/pontos-turisticos', {
+                const resposta = await fetch('/pontos', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -85,16 +111,20 @@
                 const resultado = await resposta.json()
 
                 if (resposta.ok) {
-                    document.getElementById('mensagem').textContent = 'Ponto enviado para aprovação com sucesso!'
-                    document.getElementById('mensagem').style.color = 'green'
-                    setTimeout(() => window.location.href = '/', 1500)
+                    mensagem.textContent = resultado.status === 'aprovado'
+                        ? 'Ponto cadastrado com sucesso!'
+                        : 'Ponto enviado para aprovacao com sucesso!'
+                    mensagem.style.color = 'green'
+                    setTimeout(() => window.location.href = `/ponto/${resultado.id}`, 800)
                 } else {
-                    document.getElementById('mensagem').textContent = resultado.detail || 'Erro ao cadastrar ponto.'
-                    document.getElementById('mensagem').style.color = 'red'
+                    mensagem.textContent = Array.isArray(resultado.detail)
+                        ? resultado.detail.map(erro => erro.msg).join(' | ')
+                        : resultado.detail || 'Erro ao cadastrar ponto.'
+                    mensagem.style.color = 'red'
                 }
             } catch (erro) {
-                document.getElementById('mensagem').textContent = 'Erro de conexão com o servidor.'
-                document.getElementById('mensagem').style.color = 'red'
+                mensagem.textContent = 'Erro de conexao com o servidor.'
+                mensagem.style.color = 'red'
             }
         })
     </script>

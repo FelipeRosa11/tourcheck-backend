@@ -40,3 +40,11 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     usuario: UsuarioResponse
+
+
+class UsuarioTipoInput(BaseModel):
+    tipo: TipoUsuario
+
+
+class PrimeiroAdminInput(BaseModel):
+    email: EmailStr

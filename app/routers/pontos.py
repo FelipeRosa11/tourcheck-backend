@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import jwt
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, selectinload
 
@@ -13,9 +15,10 @@ from app.schemas.ponto import (
     PontoCadastroInput,
     PontoResponse,
 )
-from app.security import exigir_admin, obter_usuario_atual
+from app.security import ALGORITHM, SECRET_KEY, exigir_admin, obter_usuario_atual
 
 router = APIRouter(prefix="/pontos", tags=["Pontos turisticos"])
+optional_bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def montar_ponto_response(ponto: PontoTuristico) -> PontoResponse:
@@ -54,6 +57,20 @@ def buscar_ponto_ou_404(db: Session, ponto_id: int) -> PontoTuristico:
     return ponto
 
 
+def obter_usuario_opcional(
+    credenciais: HTTPAuthorizationCredentials | None,
+    db: Session,
+) -> Usuario | None:
+    if credenciais is None:
+        return None
+    try:
+        payload = jwt.decode(credenciais.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        usuario_id = int(payload.get("sub"))
+    except (jwt.PyJWTError, TypeError, ValueError):
+        return None
+    return db.get(Usuario, usuario_id)
+
+
 @router.get("", response_model=list[PontoResponse])
 def listar_pontos(
     busca: str | None = Query(default=None, description="Busca por nome, categoria, cidade ou bairro"),
@@ -61,8 +78,16 @@ def listar_pontos(
     categoria: str | None = None,
     incluir_pendentes: bool = False,
     db: Session = Depends(get_db),
+    credenciais: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
 ) -> list[PontoResponse]:
     consulta = db.query(PontoTuristico).options(selectinload(PontoTuristico.avaliacoes))
+
+    usuario = obter_usuario_opcional(credenciais, db)
+    if incluir_pendentes and (usuario is None or usuario.tipo != TipoUsuario.ADMIN):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Apenas administradores podem listar pontos pendentes.",
+        )
 
     if not incluir_pendentes:
         consulta = consulta.filter(PontoTuristico.status == StatusPonto.APROVADO)
@@ -86,9 +111,18 @@ def listar_pontos(
 
 
 @router.get("/{ponto_id}", response_model=PontoResponse)
-def obter_ponto(ponto_id: int, db: Session = Depends(get_db)) -> PontoResponse:
+def obter_ponto(
+    ponto_id: int,
+    db: Session = Depends(get_db),
+    credenciais: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
+) -> PontoResponse:
     ponto = buscar_ponto_ou_404(db, ponto_id)
-    if ponto.status != StatusPonto.APROVADO:
+    usuario = obter_usuario_opcional(credenciais, db)
+    pode_ver_pendente = (
+        usuario is not None
+        and (usuario.tipo == TipoUsuario.ADMIN or ponto.criado_por_id == usuario.id)
+    )
+    if ponto.status != StatusPonto.APROVADO and not pode_ver_pendente:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ponto turistico nao encontrado.")
     return montar_ponto_response(ponto)
 

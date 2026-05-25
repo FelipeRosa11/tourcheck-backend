@@ -45,7 +45,7 @@
                     if (resposta.ok) {
                         // salva o token no localStorage para usar nas próximas requisições
                         localStorage.setItem('access_token', resultado.access_token)
-                        localStorage.setItem('tipo_usuario', resultado.usuario.tipo)
+                        localStorage.setItem('tipo_usuario', String(resultado.usuario.tipo || '').toLowerCase())
 
                         document.getElementById('mensagem').textContent = 'Login realizado com sucesso!'
                         document.getElementById('mensagem').style.color = 'green'
