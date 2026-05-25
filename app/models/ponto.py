@@ -37,3 +37,6 @@ class PontoTuristico(Base):
     avaliacoes = relationship(
         "Avaliacao", back_populates="ponto", cascade="all, delete-orphan"
     )
+    salvos = relationship(
+        "PontoSalvo", back_populates="ponto", cascade="all, delete-orphan"
+    )

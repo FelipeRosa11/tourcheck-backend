@@ -32,6 +32,9 @@ class Usuario(Base):
     telefones: Mapped[list["TelefoneUsuario"]] = relationship(
         back_populates="usuario", cascade="all, delete-orphan"
     )
+    pontos_salvos = relationship(
+        "PontoSalvo", back_populates="usuario", cascade="all, delete-orphan"
+    )
 
 
 class TelefoneUsuario(Base):

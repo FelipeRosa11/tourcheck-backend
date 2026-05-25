@@ -28,6 +28,7 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     import app.models.avaliacao  # noqa: F401
     import app.models.ponto  # noqa: F401
+    import app.models.ponto_salvo  # noqa: F401
     import app.models.usuario  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

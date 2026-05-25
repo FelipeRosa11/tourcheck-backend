@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.database import get_db
 from app.models.avaliacao import Avaliacao
 from app.models.ponto import PontoTuristico, StatusPonto
+from app.models.ponto_salvo import PontoSalvo
 from app.models.usuario import TipoUsuario, Usuario
 from app.schemas.ponto import (
     AvaliacaoInput,
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/pontos", tags=["Pontos turisticos"])
 optional_bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def montar_ponto_response(ponto: PontoTuristico) -> PontoResponse:
+def montar_ponto_response(ponto: PontoTuristico, salvo: bool = False) -> PontoResponse:
     notas = [avaliacao.nota for avaliacao in ponto.avaliacoes]
     media = round(sum(notas) / len(notas), 2) if notas else 0
     return PontoResponse.model_validate(
@@ -41,6 +42,7 @@ def montar_ponto_response(ponto: PontoTuristico) -> PontoResponse:
             "criado_por_id": ponto.criado_por_id,
             "media_avaliacoes": media,
             "total_avaliacoes": len(notas),
+            "salvo": salvo,
         }
     )
 
@@ -76,6 +78,7 @@ def listar_pontos(
     busca: str | None = Query(default=None, description="Busca por nome, categoria, cidade ou bairro"),
     cidade: str | None = None,
     categoria: str | None = None,
+    ordenar: str = Query(default="nome", pattern="^(nome|avaliacao_desc|avaliacao_asc|nota_desc|nota_asc)$"),
     incluir_pendentes: bool = False,
     db: Session = Depends(get_db),
     credenciais: HTTPAuthorizationCredentials | None = Depends(optional_bearer_scheme),
@@ -107,7 +110,37 @@ def listar_pontos(
         )
 
     pontos = consulta.order_by(PontoTuristico.nome.asc()).all()
-    return [montar_ponto_response(ponto) for ponto in pontos]
+    salvos_ids: set[int] = set()
+    if usuario is not None:
+        salvos_ids = {
+            ponto_id
+            for (ponto_id,) in db.query(PontoSalvo.ponto_id)
+            .filter(PontoSalvo.usuario_id == usuario.id)
+            .all()
+        }
+
+    respostas = [montar_ponto_response(ponto, ponto.id in salvos_ids) for ponto in pontos]
+    if ordenar in ("avaliacao_desc", "nota_desc"):
+        respostas.sort(key=lambda ponto: (ponto.media_avaliacoes, ponto.total_avaliacoes), reverse=True)
+    elif ordenar in ("avaliacao_asc", "nota_asc"):
+        respostas.sort(key=lambda ponto: (ponto.media_avaliacoes, ponto.total_avaliacoes))
+    return respostas
+
+
+@router.get("/salvos/me", response_model=list[PontoResponse])
+def listar_pontos_salvos(
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(obter_usuario_atual),
+) -> list[PontoResponse]:
+    salvos = (
+        db.query(PontoSalvo)
+        .join(PontoSalvo.ponto)
+        .options(selectinload(PontoSalvo.ponto).selectinload(PontoTuristico.avaliacoes))
+        .filter(PontoSalvo.usuario_id == usuario.id, PontoTuristico.status == StatusPonto.APROVADO)
+        .order_by(PontoSalvo.criado_em.desc())
+        .all()
+    )
+    return [montar_ponto_response(salvo.ponto, salvo=True) for salvo in salvos]
 
 
 @router.get("/{ponto_id}", response_model=PontoResponse)
@@ -124,7 +157,15 @@ def obter_ponto(
     )
     if ponto.status != StatusPonto.APROVADO and not pode_ver_pendente:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ponto turistico nao encontrado.")
-    return montar_ponto_response(ponto)
+    esta_salvo = False
+    if usuario is not None:
+        esta_salvo = (
+            db.query(PontoSalvo)
+            .filter(PontoSalvo.usuario_id == usuario.id, PontoSalvo.ponto_id == ponto.id)
+            .first()
+            is not None
+        )
+    return montar_ponto_response(ponto, esta_salvo)
 
 
 @router.post("", response_model=PontoResponse, status_code=status.HTTP_201_CREATED)
@@ -142,6 +183,48 @@ def cadastrar_ponto(
     db.commit()
     db.refresh(ponto)
     return montar_ponto_response(ponto)
+
+
+@router.post("/{ponto_id}/salvar", response_model=PontoResponse)
+def salvar_ponto(
+    ponto_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(obter_usuario_atual),
+) -> PontoResponse:
+    ponto = buscar_ponto_ou_404(db, ponto_id)
+    if ponto.status != StatusPonto.APROVADO:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Apenas pontos aprovados podem ser salvos.",
+        )
+
+    ponto_salvo = (
+        db.query(PontoSalvo)
+        .filter(PontoSalvo.usuario_id == usuario.id, PontoSalvo.ponto_id == ponto.id)
+        .first()
+    )
+    if ponto_salvo is None:
+        db.add(PontoSalvo(usuario_id=usuario.id, ponto_id=ponto.id))
+        db.commit()
+        db.refresh(ponto)
+
+    return montar_ponto_response(ponto, salvo=True)
+
+
+@router.delete("/{ponto_id}/salvar", status_code=status.HTTP_204_NO_CONTENT)
+def remover_ponto_salvo(
+    ponto_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(obter_usuario_atual),
+):
+    ponto_salvo = (
+        db.query(PontoSalvo)
+        .filter(PontoSalvo.usuario_id == usuario.id, PontoSalvo.ponto_id == ponto_id)
+        .first()
+    )
+    if ponto_salvo is not None:
+        db.delete(ponto_salvo)
+        db.commit()
 
 
 @router.patch("/{ponto_id}", response_model=PontoResponse)

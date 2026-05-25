@@ -59,3 +59,4 @@ class PontoResponse(PontoBase):
     criado_por_id: int | None
     media_avaliacoes: float = 0
     total_avaliacoes: int = 0
+    salvo: bool = False
