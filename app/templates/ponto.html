@@ -5,7 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ponto Turistico - TourCheck</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+        body { font-family: Tahoma, sans-serif; margin: 0; background: #f5f7fb; color: #010501; }
+
+            header {
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            padding: 12px 24px;
+            background: #1a6b3a;
+            border-bottom: 1px solid #145c30;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .header-brand img {
+            height: 36px;
+            width: 36px;
+            object-fit: contain;
+        }
+        .header-brand span {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button, .button {
+            border: 0;
+            border-radius: 6px;
+            padding: 9px 16px;
+            background: #1a6b3a;
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        button.secondary, .button.secondary {
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        button.secondary:hover, .button.secondary:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        #btn-logout {
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
         main { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
         a { color: #2563eb; }
         .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
@@ -14,11 +72,29 @@
         .muted { color: #64748b; }
         .status { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e5e7eb; font-size: 13px; }
         #mensagem { font-weight: 600; }
+        .container {
+        width: 300px;
+        height: 200px;
+        overflow: hidden; /* Ensures no spillover */
+        }
     </style>
 </head>
 <body>
+    <header>
+            <div class="header-brand">
+                <span><a href="/" style="text-decoration: none; color: inherit;">TourCheck</a></span>
+                <img src="data:image/jpeg;base64,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" alt="TourCheck logo">
+            </div>
+            <div class="header-actions">
+                <span id="botoes-auth">
+                    <a class="button secondary" href="/login">Login</a>
+                    <a class="button secondary" href="/cadastro" style="margin-left:8px">Registrar</a>
+                </span>
+                <a id="link-admin" class="button secondary" href="/admin" style="display:none">Admin</a>
+                <button id="btn-logout" style="display:none" onclick="logout()">Sair</button>
+            </div>
+        </header>
     <main>
-        <a href="/">Voltar para pontos</a>
         <p id="mensagem">Carregando ponto...</p>
         <article id="ponto" class="panel" style="display:none"></article>
     </main>
@@ -55,8 +131,9 @@
                 document.title = `${ponto.nome} - TourCheck`
                 mensagem.style.display = 'none'
                 container.style.display = 'block'
+                container.style.overflow = 'hidden'
                 container.innerHTML = `
-                    ${ponto.imagem_url ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}">` : ''}
+                    ${ponto.imagem_url ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}" style="width: 100%; height: 100%; object-fit: contain;">` : ''}
                     <div class="content">
                         <h1>${escaparHtml(ponto.nome)}</h1>
                         <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
