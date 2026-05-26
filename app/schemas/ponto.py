@@ -60,3 +60,4 @@ class PontoResponse(PontoBase):
     media_avaliacoes: float = 0
     total_avaliacoes: int = 0
     salvo: bool = False
+    avaliacoes: list[AvaliacaoResponse] = []  # ← adicionado
