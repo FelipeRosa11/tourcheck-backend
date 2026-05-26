@@ -96,7 +96,7 @@
     <header>
         <div class="header-brand">
             <span><a href="/" style="text-decoration: none; color: inherit;">TourCheck</a></span>
-            <img src="data:image/jpeg;base64,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" alt="TourCheck logo">
+            <img src="https://i.imgur.com/5WSo4a3.png" referrerpolicy="no-referrer" alt="TourCheck logo">
         </div>
         <div class="header-actions">
             <span id="botoes-auth">
@@ -115,6 +115,11 @@
         <form class="toolbar" id="form-busca">
             <input type="search" id="busca" placeholder="Buscar por nome, cidade, bairro ou categoria">
             <button type="submit">Buscar</button>
+            <select id="ordenar">
+                <option value="nome">Ordenar por nome</option>
+                <option value="avaliacao_desc">Maior avaliacao</option>
+                <option value="avaliacao_asc">Menor avaliacao</option>
+            </select>
             <a class="button" href="/ponto_cadastro" id="link-cadastrar" style="display:none">Cadastrar Ponto</a>
         </form>
 
@@ -221,10 +226,9 @@
             try {
                 const params = new URLSearchParams()
                 if (busca) params.set('busca', busca)
-
+                params.set('ordenar', document.getElementById('ordenar').value)
                 const resposta = await fetch(`/pontos?${params.toString()}`)
                 const pontos = await resposta.json()
-
                 if (!resposta.ok) {
                     statusEl.textContent = pontos.detail || 'Erro ao carregar pontos.'
                     return
@@ -239,6 +243,8 @@
                 pontos.forEach(ponto => {
                     const item = document.createElement('article')
                     item.className = 'card'
+                    item.style.cursor = 'pointer'
+                    item.onclick = () => window.location.href = `/ponto/${ponto.id}`
 
                     // bloco de avaliação — só aparece se estiver logado
                     const blocoAvaliacao = token ? `
@@ -288,6 +294,11 @@
             buscaAtiva = termo !== ''
             carregarPontos(termo)
         })
+
+        document.getElementById('ordenar').addEventListener('change', function() {
+            carregarPontos(document.getElementById('busca').value.trim())
+        })
+
 
         carregarPontos()
     </script>
