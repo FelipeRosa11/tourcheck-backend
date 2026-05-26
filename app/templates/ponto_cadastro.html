@@ -1,105 +1,265 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Ponto Turistico - TourCheck</title>
+    <title>Cadastro de Ponto Turístico - TourCheck</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
-        main { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
-        a { color: #2563eb; }
-        form { display: grid; gap: 14px; background: white; border: 1px solid #d9e0ea; border-radius: 8px; padding: 18px; }
-        label { display: grid; gap: 6px; font-weight: 600; }
-        input, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
-        textarea { min-height: 110px; resize: vertical; }
-        .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-        button { border: 0; border-radius: 6px; padding: 11px 16px; background: #2563eb; color: white; cursor: pointer; font-size: 15px; }
-        #mensagem { font-weight: 600; }
+        body { font-family: Tahoma, sans-serif; margin: 0; background: #f5f7fb; color: #010501; }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            position: relative;
+            padding: 12px 24px;
+            background: #1a6b3a;
+            border-bottom: 1px solid #145c30;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .header-brand img { height: 36px; width: 36px; object-fit: contain; }
+        .header-brand span { color: #ffffff; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+
+        button, .button {
+            border: 0;
+            border-radius: 6px;
+            padding: 9px 16px;
+            background: #1a6b3a;
+            color: white;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        button.secondary, .button.secondary {
+            background: rgba(255,255,255,0.15);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        button.secondary:hover, .button.secondary:hover { background: rgba(255,255,255,0.25); }
+
+        .page-center {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 36px 24px;
+            min-height: calc(100vh - 62px);
+        }
+        .form-box {
+            background: #ffffff;
+            border: 1px solid #d9e0ea;
+            border-radius: 10px;
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+        .form-box h1 { margin: 0 0 6px; font-size: 22px; }
+        .form-box p.subtitle { margin: 0 0 24px; color: #64748b; font-size: 14px; }
+
+        .form-row { display: flex; gap: 16px; }
+        .form-row .form-group { flex: 1; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-group label { font-size: 14px; font-weight: bold; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { border-color: #1a6b3a; }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+        .form-group .optional { font-weight: normal; color: #94a3b8; }
+
+        .btn-submit {
+            width: 100%;
+            padding: 11px;
+            background: #1a6b3a;
+            color: white;
+            border: 0;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .btn-submit:hover { background: #145c30; }
+
+        .form-box .rodape { margin-top: 18px; font-size: 14px; text-align: center; color: #64748b; }
+        .form-box .rodape a { color: #1a6b3a; text-decoration: none; font-weight: bold; }
+
+        #mensagem { margin-top: 14px; font-size: 14px; text-align: center; min-height: 20px; }
+
+        .section-divider {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.8px;
+            margin: 20px 0 12px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+        }
     </style>
 </head>
 <body>
-    <main>
-        <a href="/">Voltar para pontos</a>
-        <h1>Cadastro de Ponto Turistico</h1>
+    <header>
+        <div class="header-brand">
+            <span><a href="/" style="text-decoration: none; color: inherit;">TourCheck</a></span>
+            <img src="data:image/jpeg;base64,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" alt="TourCheck logo">
+        </div>
+        <div class="header-actions">
+            <span id="botoes-auth">
+                <a class="button secondary" href="/login">Login</a>
+                <a class="button secondary" href="/cadastro" style="margin-left:8px">Registrar</a>
+            </span>
+            <a id="link-admin" class="button secondary" href="/admin" style="display:none">Admin</a>
+            <button id="btn-logout" class="secondary" style="display:none" onclick="logout()">Sair</button>
+        </div>
+    </header>
 
-        <form id="form-ponto">
-            <label>Nome
-                <input type="text" id="nome" required minlength="3" maxlength="120">
-            </label>
+    <div class="page-center">
+        <div class="form-box">
+            <h1>Cadastrar Ponto</h1>
+            <p class="subtitle">Preencha as informações do ponto turístico</p>
 
-            <label>Descricao
-                <textarea id="descricao" required minlength="10"></textarea>
-            </label>
-
-            <div class="row">
-                <label>Categoria
-                    <input type="text" id="categoria" required minlength="2" maxlength="60">
-                </label>
-                <label>Cidade
-                    <input type="text" id="cidade" required minlength="2" maxlength="80">
-                </label>
+            <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" placeholder="Nome do ponto turístico" required>
             </div>
 
-            <div class="row">
-                <label>Bairro
-                    <input type="text" id="bairro" maxlength="80">
-                </label>
-                <label>Endereco
-                    <input type="text" id="endereco" maxlength="255">
-                </label>
+            <div class="form-group">
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" placeholder="Descreva o ponto turístico..." required></textarea>
             </div>
 
-            <div class="row">
-                <label>Latitude
-                    <input type="number" step="any" id="latitude" min="-90" max="90">
-                </label>
-                <label>Longitude
-                    <input type="number" step="any" id="longitude" min="-180" max="180">
-                </label>
+            <div class="form-group">
+                <label for="categoria">Categoria</label>
+                <select id="categoria">
+                    <option value="">-- Selecione uma categoria --</option>
+                    <option value="Monumento">Monumento</option>
+                    <option value="Natureza">Natureza</option>
+                    <option value="Cultura">Cultura</option>
+                    <option value="Gastronomia">Gastronomia</option>
+                    <option value="Entretenimento">Entretenimento</option>
+                    <option value="Religioso">Religioso</option>
+                    <option value="Historico">Histórico</option>
+                    <option value="Outro">Outro</option>
+                </select>
             </div>
 
-            <label>URL da imagem
+            <p class="section-divider">Localização</p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cidade">Cidade</label>
+                    <input type="text" id="cidade" placeholder="Ex: Rio de Janeiro" required>
+                </div>
+                <div class="form-group">
+                    <label for="bairro">Bairro <span class="optional">(opcional)</span></label>
+                    <input type="text" id="bairro" placeholder="Ex: Centro">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="endereco">Endereço <span class="optional">(opcional)</span></label>
+                <input type="text" id="endereco" placeholder="Rua, número...">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="latitude">Latitude <span class="optional">(opcional)</span></label>
+                    <input type="number" step="any" id="latitude" placeholder="-22.9068">
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude <span class="optional">(opcional)</span></label>
+                    <input type="number" step="any" id="longitude" placeholder="-43.1729">
+                </div>
+            </div>
+
+            <p class="section-divider">Mídia</p>
+
+            <div class="form-group">
+                <label for="imagem_url">URL da Imagem <span class="optional">(opcional)</span></label>
                 <input type="url" id="imagem_url" placeholder="https://...">
-            </label>
+            </div>
 
-            <button type="submit">Salvar ponto</button>
-        </form>
+            <button class="btn-submit" id="btn-enviar" type="button">Enviar para aprovação</button>
 
-        <p id="mensagem"></p>
-    </main>
+            <p id="mensagem"></p>
+
+            <p class="rodape"><a href="/">Voltar para a página inicial</a></p>
+        </div>
+    </div>
 
     <script>
         const token = localStorage.getItem('access_token')
-        if (!token) {
+        if (!token) window.location.href = '/login'
+
+        // Atualiza header conforme autenticação
+        if (token) {
+            document.getElementById('botoes-auth').style.display = 'none'
+            document.getElementById('btn-logout').style.display = 'inline'
+            verificarPerfil()
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('tipo_usuario')
             window.location.href = '/login'
         }
 
-        function valorOuNulo(id) {
-            const valor = document.getElementById(id).value.trim()
-            return valor || null
+        async function verificarPerfil() {
+            try {
+                const resposta = await fetch('/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                if (!resposta.ok) return
+                const usuario = await resposta.json()
+                const tipo = String(usuario.tipo || '').toLowerCase()
+                localStorage.setItem('tipo_usuario', tipo)
+                if (tipo === 'admin') document.getElementById('link-admin').style.display = 'inline'
+            } catch (e) {}
         }
 
-        document.getElementById('form-ponto').addEventListener('submit', async function(event) {
-            event.preventDefault()
+        document.getElementById('btn-enviar').addEventListener('click', async function() {
+            const mensagemEl = document.getElementById('mensagem')
 
-            const dados = {
-                nome: valorOuNulo('nome'),
-                descricao: valorOuNulo('descricao'),
-                categoria: valorOuNulo('categoria'),
-                cidade: valorOuNulo('cidade'),
-                bairro: valorOuNulo('bairro'),
-                endereco: valorOuNulo('endereco'),
-                latitude: valorOuNulo('latitude') ? parseFloat(valorOuNulo('latitude')) : null,
-                longitude: valorOuNulo('longitude') ? parseFloat(valorOuNulo('longitude')) : null,
-                imagem_url: valorOuNulo('imagem_url'),
+            const categoria = document.getElementById('categoria').value
+            if (!categoria) {
+                mensagemEl.textContent = 'Selecione uma categoria.'
+                mensagemEl.style.color = 'red'
+                return
             }
 
-            const mensagem = document.getElementById('mensagem')
-            mensagem.textContent = 'Salvando ponto...'
-            mensagem.style.color = '#1f2937'
+            const dados = {
+                nome: document.getElementById('nome').value,
+                descricao: document.getElementById('descricao').value,
+                categoria: categoria,
+                cidade: document.getElementById('cidade').value,
+                bairro: document.getElementById('bairro').value || null,
+                endereco: document.getElementById('endereco').value || null,
+                latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
+                longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null,
+                imagem_url: document.getElementById('imagem_url').value || null,
+            }
 
             try {
-                const resposta = await fetch('/pontos', {
+                const resposta = await fetch('/pontos-turisticos', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -108,23 +268,29 @@
                     body: JSON.stringify(dados)
                 })
 
-                const resultado = await resposta.json()
+                let resultado
+                try {
+                    resultado = await resposta.json()
+                } catch {
+                    mensagemEl.textContent = 'Resposta inválida do servidor.'
+                    mensagemEl.style.color = 'red'
+                    return
+                }
 
                 if (resposta.ok) {
-                    mensagem.textContent = resultado.status === 'aprovado'
-                        ? 'Ponto cadastrado com sucesso!'
-                        : 'Ponto enviado para aprovacao com sucesso!'
-                    mensagem.style.color = 'green'
-                    setTimeout(() => window.location.href = `/ponto/${resultado.id}`, 800)
+                    mensagemEl.textContent = 'Ponto enviado para aprovação!'
+                    mensagemEl.style.color = 'green'
+                    setTimeout(() => window.location.href = '/', 1500)
                 } else {
-                    mensagem.textContent = Array.isArray(resultado.detail)
-                        ? resultado.detail.map(erro => erro.msg).join(' | ')
-                        : resultado.detail || 'Erro ao cadastrar ponto.'
-                    mensagem.style.color = 'red'
+                    const detalhe = typeof resultado.detail === 'string'
+                        ? resultado.detail
+                        : 'Erro ao cadastrar ponto. Verifique os dados informados.'
+                    mensagemEl.textContent = detalhe
+                    mensagemEl.style.color = 'red'
                 }
             } catch (erro) {
-                mensagem.textContent = 'Erro de conexao com o servidor.'
-                mensagem.style.color = 'red'
+                mensagemEl.textContent = 'Erro de conexão com o servidor.'
+                mensagemEl.style.color = 'red'
             }
         })
     </script>
