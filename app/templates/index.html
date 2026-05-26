@@ -23,100 +23,80 @@
             left: 50%;
             transform: translateX(-50%);
         }
-        .header-brand img {
-            height: 36px;
-            width: 36px;
-            object-fit: contain;
-        }
-        .header-brand span {
-            color: #ffffff;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header-brand img { height: 36px; width: 36px; object-fit: contain; }
+        .header-brand span { color: #ffffff; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
 
         button, .button {
-            border: 0;
-            border-radius: 6px;
-            padding: 9px 16px;
-            background: #1a6b3a;
-            color: white;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            display: inline-block;
+            border: 0; border-radius: 6px; padding: 9px 16px;
+            background: #1a6b3a; color: white; cursor: pointer;
+            text-decoration: none; font-size: 14px; display: inline-block;
         }
         button.secondary, .button.secondary {
-            background: rgba(255,255,255,0.15);
-            color: #ffffff;
+            background: rgba(255,255,255,0.15); color: #ffffff;
             border: 1px solid rgba(255,255,255,0.35);
         }
-        button.secondary:hover, .button.secondary:hover {
-            background: rgba(255,255,255,0.25);
-        }
-        #btn-logout {
-            background: rgba(255,255,255,0.15);
-            color: #ffffff;
-            border: 1px solid rgba(255,255,255,0.35);
-        }
+        button.secondary:hover, .button.secondary:hover { background: rgba(255,255,255,0.25); }
+        button.danger { background: #c0392b; color: white; font-size: 13px; padding: 6px 12px; }
+        #btn-logout { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.35); }
 
         main { max-width: 1040px; margin: 0 auto; padding: 28px 20px; }
-
         .toolbar { display: flex; gap: 10px; margin: 20px 0; }
         .toolbar input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
-
         .status { margin-bottom: 16px; color: #64748b; font-size: 14px; }
 
-        /* Lista de pontos */
         #lista-pontos { display: flex; flex-direction: column; gap: 14px; }
 
         .card {
-            background: #e2f3e4;
-            border: 1px solid #d9e0ea;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: row;
-            cursor: pointer;
+            background: #e2f3e4; border: 1px solid #d9e0ea;
+            border-radius: 8px; overflow: hidden;
+            display: flex; flex-direction: row;
         }
         .card-img-wrap {
-            flex: 0 0 220px;
-            max-width: 220px;
-            min-height: 150px;
-            background: #c8e6c9;
-            overflow: hidden;
+            flex: 0 0 220px; max-width: 220px;
+            min-height: 150px; background: #c8e6c9; overflow: hidden;
         }
-        .card-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .card-img-placeholder {
-            width: 100%;
-            height: 100%;
-            min-height: 150px;
-            background: #c8e6c9;
-        }
+        .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .card-img-placeholder { width: 100%; height: 100%; min-height: 150px; background: #c8e6c9; }
         .card-content { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
         .card h3 { margin: 0 0 6px; font-size: 17px; }
         .muted { color: #64748b; font-size: 14px; }
         .card p { margin: 6px 0; font-size: 14px; }
-        .card-footer { margin-top: 12px; }
+
+        /* Avaliação */
+        .avaliacao-box {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #c8e6c9;
+        }
+        .avaliacao-box select, .avaliacao-box input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-right: 6px;
+        }
+        .avaliacao-box input[type="text"] { width: 200px; }
+
+        /* Avaliações listadas */
+        .avaliacao-item {
+            background: #f0faf1;
+            border: 1px solid #c8e6c9;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 6px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
     <header>
-        
         <div class="header-brand">
             <span><a href="/" style="text-decoration: none; color: inherit;">TourCheck</a></span>
             <img src="data:image/jpeg;base64,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" alt="TourCheck logo">
-
         </div>
         <div class="header-actions">
             <span id="botoes-auth">
@@ -144,6 +124,7 @@
 
     <script>
         const token = localStorage.getItem('access_token')
+        let tipoUsuario = localStorage.getItem('tipo_usuario') || ''
         let buscaAtiva = false
 
         if (token) {
@@ -164,15 +145,14 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 if (!resposta.ok) return
-
                 const usuario = await resposta.json()
-                const tipo = String(usuario.tipo || '').toLowerCase()
-                localStorage.setItem('tipo_usuario', tipo)
+                tipoUsuario = String(usuario.tipo || '').toLowerCase()
+                localStorage.setItem('tipo_usuario', tipoUsuario)
 
-                if (tipo === 'admin') {
+                if (tipoUsuario === 'admin') {
                     document.getElementById('link-admin').style.display = 'inline'
                 }
-                if (tipo === 'admin' || tipo === 'comum') {
+                if (tipoUsuario === 'admin' || tipoUsuario === 'comum') {
                     document.getElementById('link-cadastrar').style.display = 'inline'
                 }
             } catch (erro) {
@@ -186,6 +166,52 @@
             return div.innerHTML
         }
 
+        // ── Avaliação ──────────────────────────────────────────
+        async function avaliarPonto(pontoId) {
+            if (!token) {
+                alert('Faça login para avaliar.')
+                window.location.href = '/login'
+                return
+            }
+            const nota = document.getElementById(`nota-${pontoId}`).value
+            const comentario = document.getElementById(`comentario-${pontoId}`).value
+
+            if (!nota) { alert('Selecione uma nota.'); return }
+
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ nota: parseInt(nota), comentario: comentario || null })
+            })
+
+            const resultado = await resposta.json()
+            if (resposta.ok) {
+                alert('Avaliação enviada! Se já havia avaliado, ela foi atualizada.')
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert(resultado.detail || 'Erro ao avaliar.')
+            }
+        }
+
+        // ── Apagar avaliação (só admin) ────────────────────────
+        async function apagarAvaliacao(pontoId, avaliacaoId) {
+            if (!confirm('Apagar esta avaliação?')) return
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                alert('Avaliação apagada.')
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert('Erro ao apagar avaliação.')
+            }
+        }
+
+        // ── Carregar pontos ────────────────────────────────────
         async function carregarPontos(busca = '') {
             const lista = document.getElementById('lista-pontos')
             const statusEl = document.getElementById('status')
@@ -203,20 +229,37 @@
                     statusEl.textContent = pontos.detail || 'Erro ao carregar pontos.'
                     return
                 }
-
                 if (pontos.length === 0) {
                     statusEl.textContent = 'Nenhum ponto turístico encontrado.'
                     return
                 }
 
-                // Só exibe a contagem quando há busca ativa
                 statusEl.textContent = buscaAtiva ? `${pontos.length} ponto(s) encontrado(s).` : ''
 
                 pontos.forEach(ponto => {
                     const item = document.createElement('article')
                     item.className = 'card'
-                    item.style.cursor = 'pointer'
-                    item.onclick = () => window.location.href = `/ponto/${ponto.id}`
+
+                    // bloco de avaliação — só aparece se estiver logado
+                    const blocoAvaliacao = token ? `
+                        <div class="avaliacao-box">
+                            <strong>Avaliar:</strong>
+                            <select id="nota-${ponto.id}">
+                                <option value="">-- Nota --</option>
+                                <option value="1">1 ⭐</option>
+                                <option value="2">2 ⭐</option>
+                                <option value="3">3 ⭐</option>
+                                <option value="4">4 ⭐</option>
+                                <option value="5">5 ⭐</option>
+                            </select>
+                            <input type="text" id="comentario-${ponto.id}" placeholder="Comentário (opcional)">
+                            <button onclick="avaliarPonto(${ponto.id})">Enviar</button>
+                            <p style="font-size:12px;color:#64748b;margin:4px 0 0">
+                                Se já avaliou este ponto, sua nota anterior será substituída.
+                            </p>
+                        </div>
+                    ` : `<p style="margin-top:10px;font-size:13px"><a href="/login">Faça login para avaliar</a></p>`
+
                     item.innerHTML = `
                         <div class="card-img-wrap">
                             ${ponto.imagem_url
@@ -228,7 +271,8 @@
                             <h3>${escaparHtml(ponto.nome)}</h3>
                             <p class="muted">${escaparHtml(ponto.categoria)} &bull; ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
                             <p>${escaparHtml(ponto.descricao)}</p>
-                            <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} (${ponto.total_avaliacoes} avaliações)</p>
+                            <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliações)</p>
+                            ${blocoAvaliacao}
                         </div>
                     `
                     lista.appendChild(item)

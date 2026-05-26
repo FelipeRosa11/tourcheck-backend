@@ -43,6 +43,17 @@ def montar_ponto_response(ponto: PontoTuristico, salvo: bool = False) -> PontoRe
             "media_avaliacoes": media,
             "total_avaliacoes": len(notas),
             "salvo": salvo,
+            "avaliacoes": [  # ← adicionado
+                {
+                    "id": a.id,
+                    "usuario_id": a.usuario_id,
+                    "ponto_id": a.ponto_id,
+                    "nota": a.nota,
+                    "comentario": a.comentario,
+                    "criado_em": a.criado_em,
+                }
+                for a in ponto.avaliacoes
+            ],
         }
     )
 
