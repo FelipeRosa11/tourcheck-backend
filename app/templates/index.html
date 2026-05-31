@@ -44,6 +44,8 @@
         .toolbar { display: flex; gap: 10px; margin: 20px 0; }
         .toolbar input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
         .status { margin-bottom: 16px; color: #64748b; font-size: 14px; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .card-actions button { padding: 7px 12px; font-size: 13px; }
 
         #lista-pontos { display: flex; flex-direction: column; gap: 14px; }
 
@@ -120,6 +122,7 @@
                 <option value="avaliacao_desc">Maior avaliacao</option>
                 <option value="avaliacao_asc">Menor avaliacao</option>
             </select>
+            <button type="button" class="secondary" id="btn-salvos" style="display:none" onclick="alternarSalvos()">Meus salvos</button>
             <a class="button" href="/ponto_cadastro" id="link-cadastrar" style="display:none">Cadastrar Ponto</a>
         </form>
 
@@ -131,6 +134,7 @@
         const token = localStorage.getItem('access_token')
         let tipoUsuario = localStorage.getItem('tipo_usuario') || ''
         let buscaAtiva = false
+        let mostrandoSalvos = false
 
         if (token) {
             document.getElementById('botoes-auth').style.display = 'none'
@@ -159,6 +163,7 @@
                 }
                 if (tipoUsuario === 'admin' || tipoUsuario === 'comum') {
                     document.getElementById('link-cadastrar').style.display = 'inline'
+                    document.getElementById('btn-salvos').style.display = 'inline-block'
                 }
             } catch (erro) {
                 console.error('Nao foi possivel verificar perfil.', erro)
@@ -169,6 +174,32 @@
             const div = document.createElement('div')
             div.textContent = valor || ''
             return div.innerHTML
+        }
+
+        async function alternarSalvos() {
+            mostrandoSalvos = !mostrandoSalvos
+            document.getElementById('btn-salvos').textContent = mostrandoSalvos ? 'Todos os pontos' : 'Meus salvos'
+            document.getElementById('busca').value = ''
+            buscaAtiva = false
+            carregarPontos()
+        }
+
+        async function alterarPontoSalvo(event, pontoId, salvar) {
+            event.stopPropagation()
+            if (!token) {
+                alert('Faca login para salvar pontos.')
+                window.location.href = '/login'
+                return
+            }
+            const resposta = await fetch(`/pontos/${pontoId}/salvar`, {
+                method: salvar ? 'POST' : 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert('Nao foi possivel atualizar seus pontos salvos.')
+            }
         }
 
         // ── Avaliação ──────────────────────────────────────────
@@ -227,18 +258,21 @@
                 const params = new URLSearchParams()
                 if (busca) params.set('busca', busca)
                 params.set('ordenar', document.getElementById('ordenar').value)
-                const resposta = await fetch(`/pontos?${params.toString()}`)
+                const url = mostrandoSalvos ? '/pontos/salvos/me' : `/pontos?${params.toString()}`
+                const resposta = await fetch(url, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                })
                 const pontos = await resposta.json()
                 if (!resposta.ok) {
                     statusEl.textContent = pontos.detail || 'Erro ao carregar pontos.'
                     return
                 }
                 if (pontos.length === 0) {
-                    statusEl.textContent = 'Nenhum ponto turístico encontrado.'
+                    statusEl.textContent = mostrandoSalvos ? 'Voce ainda nao salvou nenhum ponto turistico.' : 'Nenhum ponto turistico encontrado.'
                     return
                 }
 
-                statusEl.textContent = buscaAtiva ? `${pontos.length} ponto(s) encontrado(s).` : ''
+                statusEl.textContent = mostrandoSalvos ? `${pontos.length} ponto(s) salvo(s).` : (buscaAtiva ? `${pontos.length} ponto(s) encontrado(s).` : '')
 
                 pontos.forEach(ponto => {
                     const item = document.createElement('article')
@@ -269,7 +303,7 @@
                     item.innerHTML = `
                         <div class="card-img-wrap">
                             ${ponto.imagem_url
-                                ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}">`
+                                ? `<img src="${escaparHtml(ponto.imagem_url)}" referrerpolicy="no-referrer" loading="lazy" alt="${escaparHtml(ponto.nome)}">`
                                 : `<div class="card-img-placeholder"></div>`
                             }
                         </div>
@@ -278,9 +312,19 @@
                             <p class="muted">${escaparHtml(ponto.categoria)} &bull; ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
                             <p>${escaparHtml(ponto.descricao)}</p>
                             <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliações)</p>
+                            ${token ? `
+                                <div class="card-actions">
+                                    <button onclick="alterarPontoSalvo(event, ${ponto.id}, ${!ponto.salvo})">
+                                        ${ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'}
+                                    </button>
+                                </div>
+                            ` : ''}
                             ${blocoAvaliacao}
                         </div>
                     `
+                    item.querySelectorAll('button, select, input, a').forEach(controle => {
+                        controle.addEventListener('click', event => event.stopPropagation())
+                    })
                     lista.appendChild(item)
                 })
             } catch (erro) {

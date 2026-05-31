@@ -15,6 +15,7 @@ class PontoBase(BaseModel):
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     imagem_url: str | None = Field(default=None, max_length=500)
+    imagens_urls: list[str] = Field(default_factory=list)
 
 
 class PontoCadastroInput(PontoBase):
@@ -31,6 +32,7 @@ class PontoAtualizacaoInput(BaseModel):
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     imagem_url: str | None = Field(default=None, max_length=500)
+    imagens_urls: list[str] | None = None
     status: StatusPonto | None = None
 
 

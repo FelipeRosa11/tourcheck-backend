@@ -34,6 +34,8 @@
 
         .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
         .panel img { width: 100%; max-height: 360px; object-fit: cover; }
+        .galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; padding: 8px; background: #eef7ef; }
+        .galeria img { height: 180px; max-height: 180px; border-radius: 6px; }
         .content { padding: 18px; }
         .muted { color: #64748b; font-size: 14px; }
         .status-badge {
@@ -65,6 +67,7 @@
         .comentario-item .texto { font-size: 14px; color: #374151; }
         .comentario-item .data { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         #mensagem-avaliacao { margin-top: 10px; font-size: 14px; font-weight: bold; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
     </style>
 </head>
 <body>
@@ -169,6 +172,23 @@
             }
         }
 
+        async function alterarPontoSalvo(pontoId, salvar) {
+            if (!token) {
+                alert('Faca login para salvar pontos.')
+                window.location.href = '/login'
+                return
+            }
+            const resposta = await fetch(`/pontos/${pontoId}/salvar`, {
+                method: salvar ? 'POST' : 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                carregarPonto()
+            } else {
+                alert('Nao foi possivel atualizar seus pontos salvos.')
+            }
+        }
+
         async function carregarPonto() {
             const id = obterIdDaUrl()
             const mensagem = document.getElementById('mensagem')
@@ -190,9 +210,10 @@
                 mensagem.style.display = 'none'
                 container.style.display = 'block'
 
+                const imagens = ponto.imagens_urls && ponto.imagens_urls.length ? ponto.imagens_urls : (ponto.imagem_url ? [ponto.imagem_url] : [])
                 container.innerHTML = `
-                    ${ponto.imagem_url
-                        ? `<img src="${escaparHtml(ponto.imagem_url)}" alt="${escaparHtml(ponto.nome)}">`
+                    ${imagens.length
+                        ? `<div class="galeria">${imagens.map((url, indice) => `<img src="${escaparHtml(url)}" referrerpolicy="no-referrer" alt="${escaparHtml(ponto.nome)} ${indice + 1}">`).join('')}</div>`
                         : ''
                     }
                     <div class="content">
@@ -200,11 +221,15 @@
                         <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
                         <p>${escaparHtml(ponto.descricao)}</p>
                         ${ponto.endereco ? `<p><strong>Endereço:</strong> ${escaparHtml(ponto.endereco)}</p>` : ''}
-                        ${ponto.latitude != null && ponto.longitude != null
-                            ? `<p><strong>Coordenadas:</strong> ${ponto.latitude}, ${ponto.longitude}</p>`
-                            : ''
-                        }
                         <p><strong>Avaliação média:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliação/avaliações)</p>
+                        ${token ? `
+                            <div class="actions">
+                                <button onclick="alterarPontoSalvo(${ponto.id}, ${!ponto.salvo})">
+                                    ${ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'}
+                                </button>
+                                <a class="button" href="/ponto_cadastro?editar=${ponto.id}">Editar ponto</a>
+                            </div>
+                        ` : ''}
                         <span class="status-badge">Status: ${escaparHtml(ponto.status)}</span>
                     </div>
                 `

@@ -52,6 +52,16 @@
             </div>
 
             <div class="section">
+                <h2>Edicoes pendentes</h2>
+                <div id="edicoes-pendentes" class="grid"></div>
+            </div>
+
+            <div class="section">
+                <h2>Comentarios</h2>
+                <div id="comentarios" class="grid"></div>
+            </div>
+
+            <div class="section">
                 <h2>Usuarios</h2>
                 <table>
                     <thead>
@@ -138,7 +148,7 @@
         }
 
         async function carregarPainel() {
-            await Promise.all([carregarPontosPendentes(), carregarUsuarios()])
+            await Promise.all([carregarPontosPendentes(), carregarEdicoesPendentes(), carregarComentarios(), carregarUsuarios()])
         }
 
         async function carregarPontosPendentes() {
@@ -181,6 +191,101 @@
         async function rejeitarPonto(id) {
             await api(`/pontos/${id}/rejeitar`, { method: 'PATCH' })
             carregarPontosPendentes()
+        }
+
+        function resumoEdicao(dados) {
+            const campos = ['nome', 'descricao', 'categoria', 'cidade', 'bairro', 'endereco', 'imagem_url']
+            return campos
+                .filter(campo => dados[campo] !== undefined && dados[campo] !== null && dados[campo] !== '')
+                .map(campo => `<p><strong>${campo}:</strong> ${escaparHtml(String(dados[campo]))}</p>`)
+                .join('') || '<p class="muted">Sem campos alterados.</p>'
+        }
+
+        async function carregarEdicoesPendentes() {
+            const container = document.getElementById('edicoes-pendentes')
+            container.innerHTML = '<p>Carregando...</p>'
+
+            try {
+                const edicoes = await api('/admin/api/edicoes-pendentes')
+                if (edicoes.length === 0) {
+                    container.innerHTML = '<p class="muted">Nenhuma edicao pendente.</p>'
+                    return
+                }
+
+                container.innerHTML = ''
+                edicoes.forEach(edicao => {
+                    const ponto = edicao.ponto
+                    const card = document.createElement('article')
+                    card.className = 'card'
+                    card.innerHTML = `
+                        <h3>${escaparHtml(ponto.nome)}</h3>
+                        <p class="muted">Solicitado por usuario #${edicao.solicitado_por_id}</p>
+                        ${resumoEdicao(edicao.dados || {})}
+                        <div class="actions">
+                            <a href="/ponto/${ponto.id}">Ver versao atual</a>
+                            <button onclick="aprovarEdicao(${ponto.id})">Aprovar edicao</button>
+                            <button class="danger" onclick="rejeitarEdicao(${ponto.id})">Rejeitar edicao</button>
+                        </div>
+                    `
+                    container.appendChild(card)
+                })
+            } catch (erro) {
+                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+            }
+        }
+
+        async function aprovarEdicao(id) {
+            await api(`/admin/api/edicoes-pendentes/${id}/aprovar`, { method: 'PATCH' })
+            carregarEdicoesPendentes()
+        }
+
+        async function rejeitarEdicao(id) {
+            await api(`/admin/api/edicoes-pendentes/${id}/rejeitar`, { method: 'PATCH' })
+            carregarEdicoesPendentes()
+        }
+
+        async function carregarComentarios() {
+            const container = document.getElementById('comentarios')
+            container.innerHTML = '<p>Carregando...</p>'
+
+            try {
+                const pontos = await api('/admin/api/pontos')
+                const comentarios = []
+                pontos.forEach(ponto => {
+                    ;(ponto.avaliacoes || []).forEach(avaliacao => {
+                        comentarios.push({ ponto, avaliacao })
+                    })
+                })
+
+                if (comentarios.length === 0) {
+                    container.innerHTML = '<p class="muted">Nenhum comentario cadastrado.</p>'
+                    return
+                }
+
+                container.innerHTML = ''
+                comentarios.forEach(({ ponto, avaliacao }) => {
+                    const card = document.createElement('article')
+                    card.className = 'card'
+                    card.innerHTML = `
+                        <h3>${escaparHtml(ponto.nome)}</h3>
+                        <p class="muted">Nota ${avaliacao.nota}/5 - Usuario #${avaliacao.usuario_id}</p>
+                        <p>${escaparHtml(avaliacao.comentario || '(sem comentario)')}</p>
+                        <div class="actions">
+                            <a href="/ponto/${ponto.id}">Ver ponto</a>
+                            <button class="danger" onclick="apagarComentario(${ponto.id}, ${avaliacao.id})">Apagar comentario</button>
+                        </div>
+                    `
+                    container.appendChild(card)
+                })
+            } catch (erro) {
+                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+            }
+        }
+
+        async function apagarComentario(pontoId, avaliacaoId) {
+            if (!confirm('Apagar este comentario?')) return
+            await api(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, { method: 'DELETE' })
+            carregarComentarios()
         }
 
         async function carregarUsuarios() {

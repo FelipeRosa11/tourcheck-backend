@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.database import get_db, using_mongodb
 from app.models.usuario import TipoUsuario, Usuario
 
 
@@ -47,7 +47,7 @@ def obter_usuario_atual(
     except (jwt.PyJWTError, TypeError, ValueError):
         raise erro_credenciais
 
-    usuario = db.get(Usuario, usuario_id)
+    usuario = db.usuario_by_id(usuario_id) if using_mongodb() else db.get(Usuario, usuario_id)
     if usuario is None:
         raise erro_credenciais
     return usuario

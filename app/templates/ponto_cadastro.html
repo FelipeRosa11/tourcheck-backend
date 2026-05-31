@@ -136,8 +136,8 @@
 
     <div class="page-center">
         <div class="form-box">
-            <h1>Cadastrar Ponto</h1>
-            <p class="subtitle">Preencha as informações do ponto turístico</p>
+            <h1 id="titulo-form">Cadastrar Ponto</h1>
+            <p class="subtitle" id="subtitulo-form">Preencha as informações do ponto turístico</p>
 
             <div class="form-group">
                 <label for="nome">Nome</label>
@@ -182,22 +182,16 @@
                 <input type="text" id="endereco" placeholder="Rua, número...">
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude <span class="optional">(opcional)</span></label>
-                    <input type="number" step="any" id="latitude" placeholder="-22.9068">
-                </div>
-                <div class="form-group">
-                    <label for="longitude">Longitude <span class="optional">(opcional)</span></label>
-                    <input type="number" step="any" id="longitude" placeholder="-43.1729">
-                </div>
-            </div>
-
             <p class="section-divider">Mídia</p>
 
             <div class="form-group">
                 <label for="imagem_url">URL da Imagem <span class="optional">(opcional)</span></label>
                 <input type="url" id="imagem_url" placeholder="https://...">
+            </div>
+
+            <div class="form-group">
+                <label for="imagens_arquivo">Imagens do computador <span class="optional">(opcional)</span></label>
+                <input type="file" id="imagens_arquivo" accept="image/*" multiple>
             </div>
 
             <button class="btn-submit" id="btn-enviar" type="button">Enviar para aprovação</button>
@@ -211,6 +205,9 @@
     <script>
         const token = localStorage.getItem('access_token')
         if (!token) window.location.href = '/login'
+        const paramsPagina = new URLSearchParams(window.location.search)
+        const pontoEditandoId = paramsPagina.get('editar')
+        let imagensExistentes = []
 
         // Atualiza header conforme autenticação
         if (token) {
@@ -236,6 +233,39 @@
             } catch (e) {}
         }
 
+        async function carregarPontoParaEdicao() {
+            if (!pontoEditandoId) return
+
+            document.getElementById('titulo-form').textContent = 'Editar Ponto'
+            document.getElementById('subtitulo-form').textContent = 'A versão editada será enviada para validação.'
+            document.getElementById('btn-enviar').textContent = 'Enviar edição para validação'
+
+            const mensagemEl = document.getElementById('mensagem')
+            try {
+                const resposta = await fetch(`/pontos/${pontoEditandoId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                const ponto = await resposta.json()
+                if (!resposta.ok) {
+                    mensagemEl.textContent = ponto.detail || 'Não foi possível carregar o ponto.'
+                    mensagemEl.style.color = 'red'
+                    return
+                }
+
+                document.getElementById('nome').value = ponto.nome || ''
+                document.getElementById('descricao').value = ponto.descricao || ''
+                document.getElementById('categoria').value = ponto.categoria || ''
+                document.getElementById('cidade').value = ponto.cidade || ''
+                document.getElementById('bairro').value = ponto.bairro || ''
+                document.getElementById('endereco').value = ponto.endereco || ''
+                document.getElementById('imagem_url').value = ponto.imagem_url || ''
+                imagensExistentes = ponto.imagens_urls || []
+            } catch (erro) {
+                mensagemEl.textContent = 'Erro de conexão com o servidor.'
+                mensagemEl.style.color = 'red'
+            }
+        }
+
         document.getElementById('btn-enviar').addEventListener('click', async function() {
             const mensagemEl = document.getElementById('mensagem')
 
@@ -246,6 +276,33 @@
                 return
             }
 
+            let imagensUrls = pontoEditandoId ? [...imagensExistentes] : []
+            const arquivos = document.getElementById('imagens_arquivo').files
+            if (arquivos.length > 0) {
+                const formData = new FormData()
+                Array.from(arquivos).forEach(arquivo => formData.append('imagens', arquivo))
+
+                mensagemEl.textContent = 'Enviando imagens...'
+                mensagemEl.style.color = '#1a6b3a'
+
+                const respostaUpload = await fetch('/pontos/imagens', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                })
+                const resultadoUpload = await respostaUpload.json()
+                if (!respostaUpload.ok) {
+                    mensagemEl.textContent = resultadoUpload.detail || 'Erro ao enviar imagens.'
+                    mensagemEl.style.color = 'red'
+                    return
+                }
+                imagensUrls = resultadoUpload.imagens_urls || []
+            }
+
+            const imagemUrlDigitada = document.getElementById('imagem_url').value || null
+            if (imagemUrlDigitada) imagensUrls.unshift(imagemUrlDigitada)
+            imagensUrls = [...new Set(imagensUrls.filter(Boolean))]
+
             const dados = {
                 nome: document.getElementById('nome').value,
                 descricao: document.getElementById('descricao').value,
@@ -253,14 +310,13 @@
                 cidade: document.getElementById('cidade').value,
                 bairro: document.getElementById('bairro').value || null,
                 endereco: document.getElementById('endereco').value || null,
-                latitude: document.getElementById('latitude').value ? parseFloat(document.getElementById('latitude').value) : null,
-                longitude: document.getElementById('longitude').value ? parseFloat(document.getElementById('longitude').value) : null,
-                imagem_url: document.getElementById('imagem_url').value || null,
+                imagem_url: imagensUrls[0] || null,
+                imagens_urls: imagensUrls,
             }
 
             try {
-                const resposta = await fetch('/pontos', {
-                    method: 'POST',
+                const resposta = await fetch(pontoEditandoId ? `/pontos/${pontoEditandoId}` : '/pontos', {
+                    method: pontoEditandoId ? 'PATCH' : 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
@@ -278,9 +334,9 @@
                 }
 
                 if (resposta.ok) {
-                    mensagemEl.textContent = 'Ponto enviado para aprovação!'
+                    mensagemEl.textContent = pontoEditandoId ? 'Edição enviada para validação!' : 'Ponto enviado para aprovação!'
                     mensagemEl.style.color = 'green'
-                    setTimeout(() => window.location.href = '/', 1500)
+                    setTimeout(() => window.location.href = pontoEditandoId ? `/ponto/${pontoEditandoId}` : '/', 1500)
                 } else {
                     const detalhe = typeof resultado.detail === 'string'
                         ? resultado.detail
@@ -293,6 +349,8 @@
                 mensagemEl.style.color = 'red'
             }
         })
+
+        carregarPontoParaEdicao()
     </script>
 </body>
 </html>
