@@ -15,6 +15,8 @@
 - **Data da medição:** 01/06/2026
 - **Descrição das configurações:** Ambiente local Windows 11, rodando ambiente virtual Python (venv), servidor FastAPI via Uvicorn na porta 8000 e banco de dados MongoDB ativo localmente como serviço na porta 27017.
 
+<img width="1497" height="564" alt="image" src="https://github.com/user-attachments/assets/4dbac263-f876-478c-a873-d7ddc379d329" />
+
 ### Testes de carga (SLA)
 
 - **Concorrência máxima alcançada:** 50 usuários simultâneos (VUs).
