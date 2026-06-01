@@ -42,6 +42,9 @@
 - **Data da medição:** 01/06/2026
 - **Descrição das configurações:** Mesma infraestrutura local descrita no Serviço 1.
 
+  <img width="1500" height="562" alt="image" src="https://github.com/user-attachments/assets/76b1fd15-3f5f-43a5-a718-dd89514676d0" />
+
+
 ### Testes de carga (SLA)
 
 - **Concorrência máxima alcançada:** 100 usuários simultâneos (VUs).
