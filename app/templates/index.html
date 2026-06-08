@@ -41,8 +41,16 @@
         #btn-logout { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.35); }
 
         main { max-width: 1040px; margin: 0 auto; padding: 28px 20px; }
-        .toolbar { display: flex; gap: 10px; margin: 20px 0; }
+        .toolbar { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
         .toolbar input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .toolbar select {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
         .status { margin-bottom: 16px; color: #64748b; font-size: 14px; }
         .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .card-actions button { padding: 7px 12px; font-size: 13px; }
@@ -65,7 +73,6 @@
         .muted { color: #64748b; font-size: 14px; }
         .card p { margin: 6px 0; font-size: 14px; }
 
-        /* Avaliação */
         .avaliacao-box {
             margin-top: 14px;
             padding-top: 12px;
@@ -80,7 +87,6 @@
         }
         .avaliacao-box input[type="text"] { width: 200px; }
 
-        /* Avaliações listadas */
         .avaliacao-item {
             background: #f0faf1;
             border: 1px solid #c8e6c9;
@@ -115,8 +121,28 @@
         <p class="muted">Descubra novos pontos turísticos.</p>
 
         <form class="toolbar" id="form-busca">
+
             <input type="search" id="busca" placeholder="Buscar por nome, cidade, bairro ou categoria">
             <button type="submit">Buscar</button>
+            <select id="filtro-categoria">
+                <option value="">Todas as categorias</option>
+                <option value="Monumento">Monumento</option>
+                <option value="Natureza">Natureza</option>
+                <option value="Parque">Parque</option>
+                <option value="Arte urbana">Arte urbana</option>
+                <option value="Historico">Histórico</option>
+                <option value="Museu">Museu</option>
+                <option value="Aquario">Aquário</option>
+                <option value="Esporte">Esporte</option>
+                <option value="Praia">Praia</option>
+                <option value="Cultura">Cultura</option>
+                <option value="Mirante">Mirante</option>
+                <option value="Trilha">Trilha</option>
+                <option value="Gastronomia">Gastronomia</option>
+                <option value="Entretenimento">Entretenimento</option>
+                <option value="Religioso">Religioso</option>
+                <option value="Outro">Outro</option>
+            </select>
             <select id="ordenar">
                 <option value="nome">Ordenar por nome</option>
                 <option value="avaliacao_desc">Maior avaliacao</option>
@@ -202,15 +228,14 @@
             }
         }
 
-        // ── Avaliação ──────────────────────────────────────────
         async function avaliarPonto(pontoId) {
             if (!token) {
                 alert('Faça login para avaliar.')
                 window.location.href = '/login'
                 return
             }
-            const nota = document.getElementById(`nota-${pontoId}`).value
-            const comentario = document.getElementById(`comentario-${pontoId}`).value
+            const nota = document.getElementById('nota-' + pontoId).value
+            const comentario = document.getElementById('comentario-' + pontoId).value
 
             if (!nota) { alert('Selecione uma nota.'); return }
 
@@ -232,7 +257,6 @@
             }
         }
 
-        // ── Apagar avaliação (só admin) ────────────────────────
         async function apagarAvaliacao(pontoId, avaliacaoId) {
             if (!confirm('Apagar esta avaliação?')) return
             const resposta = await fetch(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, {
@@ -247,7 +271,6 @@
             }
         }
 
-        // ── Carregar pontos ────────────────────────────────────
         async function carregarPontos(busca = '') {
             const lista = document.getElementById('lista-pontos')
             const statusEl = document.getElementById('status')
@@ -258,6 +281,10 @@
                 const params = new URLSearchParams()
                 if (busca) params.set('busca', busca)
                 params.set('ordenar', document.getElementById('ordenar').value)
+
+                const categoria = document.getElementById('filtro-categoria').value
+                if (categoria) params.set('categoria', categoria)
+
                 const url = mostrandoSalvos ? '/pontos/salvos/me' : `/pontos?${params.toString()}`
                 const resposta = await fetch(url, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
@@ -280,48 +307,46 @@
                     item.style.cursor = 'pointer'
                     item.onclick = () => window.location.href = `/ponto/${ponto.id}`
 
-                    // bloco de avaliação — só aparece se estiver logado
-                    const blocoAvaliacao = token ? `
-                        <div class="avaliacao-box">
-                            <strong>Avaliar:</strong>
-                            <select id="nota-${ponto.id}">
-                                <option value="">-- Nota --</option>
-                                <option value="1">1 ⭐</option>
-                                <option value="2">2 ⭐</option>
-                                <option value="3">3 ⭐</option>
-                                <option value="4">4 ⭐</option>
-                                <option value="5">5 ⭐</option>
-                            </select>
-                            <input type="text" id="comentario-${ponto.id}" placeholder="Comentário (opcional)">
-                            <button onclick="avaliarPonto(${ponto.id})">Enviar</button>
-                            <p style="font-size:12px;color:#64748b;margin:4px 0 0">
-                                Se já avaliou este ponto, sua nota anterior será substituída.
-                            </p>
-                        </div>
-                    ` : `<p style="margin-top:10px;font-size:13px"><a href="/login">Faça login para avaliar</a></p>`
+                    const blocoAvaliacao = token
+                        ? '<div class="avaliacao-box">' +
+                            '<strong>Avaliar:</strong>' +
+                            '<select id="nota-' + ponto.id + '">' +
+                                '<option value="">-- Nota --</option>' +
+                                '<option value="1">1 ⭐</option>' +
+                                '<option value="2">2 ⭐</option>' +
+                                '<option value="3">3 ⭐</option>' +
+                                '<option value="4">4 ⭐</option>' +
+                                '<option value="5">5 ⭐</option>' +
+                            '</select>' +
+                            '<input type="text" id="comentario-' + ponto.id + '" placeholder="Comentário (opcional)">' +
+                            '<button onclick="avaliarPonto(' + ponto.id + ')">Enviar</button>' +
+                            '<p style="font-size:12px;color:#64748b;margin:4px 0 0">Se já avaliou este ponto, sua nota anterior será substituída.</p>' +
+                          '</div>'
+                        : '<p style="margin-top:10px;font-size:13px"><a href="/login">Faça login para avaliar</a></p>'
 
-                    item.innerHTML = `
-                        <div class="card-img-wrap">
-                            ${ponto.imagem_url
-                                ? `<img src="${escaparHtml(ponto.imagem_url)}" referrerpolicy="no-referrer" loading="lazy" alt="${escaparHtml(ponto.nome)}">`
-                                : `<div class="card-img-placeholder"></div>`
-                            }
-                        </div>
-                        <div class="card-content">
-                            <h3>${escaparHtml(ponto.nome)}</h3>
-                            <p class="muted">${escaparHtml(ponto.categoria)} &bull; ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
-                            <p>${escaparHtml(ponto.descricao)}</p>
-                            <p><strong>Avaliação:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliações)</p>
-                            ${token ? `
-                                <div class="card-actions">
-                                    <button onclick="alterarPontoSalvo(event, ${ponto.id}, ${!ponto.salvo})">
-                                        ${ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'}
-                                    </button>
-                                </div>
-                            ` : ''}
-                            ${blocoAvaliacao}
-                        </div>
-                    `
+                    const bairroHtml = ponto.bairro ? ', ' + escaparHtml(ponto.bairro) : ''
+
+                    item.innerHTML =
+                        '<div class="card-img-wrap">' +
+                            (ponto.imagem_url
+                                ? '<img src="' + escaparHtml(ponto.imagem_url) + '" referrerpolicy="no-referrer" loading="lazy" alt="' + escaparHtml(ponto.nome) + '">'
+                                : '<div class="card-img-placeholder"></div>') +
+                        '</div>' +
+                        '<div class="card-content">' +
+                            '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
+                            '<p class="muted">' + escaparHtml(ponto.categoria) + ' &bull; ' + escaparHtml(ponto.cidade) + bairroHtml + '</p>' +
+                            '<p>' + escaparHtml(ponto.descricao) + '</p>' +
+                            '<p><strong>Avaliação:</strong> ' + ponto.media_avaliacoes + ' ⭐ (' + ponto.total_avaliacoes + ' avaliações)</p>' +
+                            (token
+                                ? '<div class="card-actions">' +
+                                    '<button onclick="alterarPontoSalvo(event, ' + ponto.id + ', ' + !ponto.salvo + ')">' +
+                                        (ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto') +
+                                    '</button>' +
+                                  '</div>'
+                                : '') +
+                            blocoAvaliacao +
+                        '</div>'
+
                     item.querySelectorAll('button, select, input, a').forEach(controle => {
                         controle.addEventListener('click', event => event.stopPropagation())
                     })
@@ -335,7 +360,7 @@
         document.getElementById('form-busca').addEventListener('submit', function(event) {
             event.preventDefault()
             const termo = document.getElementById('busca').value.trim()
-            buscaAtiva = termo !== ''
+            buscaAtiva = termo !== '' || document.getElementById('filtro-categoria').value !== ''
             carregarPontos(termo)
         })
 
@@ -343,6 +368,10 @@
             carregarPontos(document.getElementById('busca').value.trim())
         })
 
+        document.getElementById('filtro-categoria').addEventListener('change', function() {
+            buscaAtiva = true
+            carregarPontos(document.getElementById('busca').value.trim())
+        })
 
         carregarPontos()
     </script>
