@@ -1,41 +1,50 @@
-# 🌍 TourCheck - Backend
+# TourCheck - Backend
 
-Implementação do backend do projeto **TourCheck**, um sistema completo para gestão e consulta de pontos turísticos.
+Backend do projeto **TourCheck**, desenvolvido com FastAPI e MongoDB para cadastro, consulta, avaliacao e gestao de pontos turisticos.
 
-## 👥 Integrantes do Grupo (PI2)
-* Caio Miranda Moreira da Fonseca
-* Felipe Rosa Martins
-* Gabriel Nunes Amorim
+## Integrantes
 
----
+- Caio Miranda Moreira da Fonseca
+- Felipe Rosa Martins
+- Gabriel Nunes Amorim
 
-## 📈 Testes de Performance e SLA (Fase E)
-O relatório detalhado contendo os gráficos de evolução, análise de concorrência, vazão, latência e o levantamento de hipóteses de gargalos do sistema está disponível diretamente no link abaixo:
-👉 **[Aceder ao Relatório de Medições de SLA (SLA_MEDICOES.md)](SLA_MEDICOES.md)**
+## Relatorio de Performance e SLA
 
----
+A documentacao tecnica da Fase E-2, com a comparacao entre a Medicao 1 de 01/06/2026 e a Medicao 2 de 08/06/2026, esta em:
 
-## 🛠️ Como Executar o Projeto Localmente
+**[SLA_MEDICOES.md](SLA_MEDICOES.md)**
 
-### 1. Instalar as Dependências
-Garanta que o seu ambiente virtual (`venv`) está ativo e instale os pacotes necessários:
+O relatorio inclui os servicos medidos, gargalos encontrados, alteracoes de codigo, estrategia de carga em degraus, graficos comparativos e campos para preenchimento dos resultados finais do k6/Grafana Cloud.
+
+## Execucao Local
+
+### 1. Instalar dependencias
+
 ```bash
 pip install -r requirements.txt
-2. Configuração do Banco de Dados
-O banco de dados padrão ativo agora é o MongoDB. Configure as variáveis de ambiente necessárias:
+```
 
-Snippet de código
+### 2. Configurar MongoDB
+
+```env
 DB_BACKEND=mongodb
 MONGODB_URL=mongodb://localhost:27017
 MONGODB_DATABASE=tourcheck
-Nota: O suporte ao SQLAlchemy continua disponível no sistema para PostgreSQL/SQLite. Caso queira alternar para PostgreSQL, utilize:
+```
 
-Snippet de código
-DB_BACKEND=postgresql
-DATABASE_URL=postgresql+psycopg://usuario:senha@localhost:5432/tourcheck
-3. Iniciar o Servidor
-Execute a API FastAPI utilizando o Uvicorn:
+### 3. Iniciar a API
 
-Bash
+```bash
 uvicorn app.main:app --reload
-A API estará disponível para testes em http://127.0.0.1:8000 e a documentação interativa (Swagger) em http://127.0.0.1:8000/docs.
+```
+
+A API ficara disponivel em `http://127.0.0.1:8000` e a documentacao interativa em `http://127.0.0.1:8000/docs`.
+
+## Testes de Carga
+
+Os scripts k6 usados nas medicoes estao em:
+
+- `tests_carga/cadastro_stress.js`
+- `tests_carga/busca_pontos_stress.js`
+
+Depois de executar os testes finais da Medicao 2, atualize os campos `PENDENTE` em `SLA_MEDICOES.md` com os valores exibidos pelo k6 e os links oficiais do Grafana Cloud.
