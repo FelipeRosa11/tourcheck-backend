@@ -6,17 +6,14 @@ const taxaFalha = new Rate("taxa_falha");
 
 export const options = {
   stages: [
-    { duration: "15s", target: 20 },   // aquecimento
-    { duration: "30s", target: 50 },   // carga normal
-    { duration: "30s", target: 100 },  // carga alta (baseline anterior)
-    { duration: "30s", target: 150 },  // degrau 1 acima do baseline
-    { duration: "30s", target: 200 },  // degrau 2 — zona de stress
-    { duration: "30s", target: 300 },  // degrau 3 — zona de ruptura
-    { duration: "15s", target: 0 },    // resfriamento
+    { duration: "15s", target: 20 }, // aquecimento
+    { duration: "30s", target: 50 }, // carga normal
+    { duration: "45s", target: 100 }, // teto máximo permitido pelo plano free (baseline)
+    { duration: "15s", target: 0 }, // resfriamento
   ],
   thresholds: {
-    http_req_failed: ["rate<0.05"],    // aceita até 5% de falha
-    http_req_duration: ["p(95)<500"],  // 95% das requisições abaixo de 500ms
+    http_req_failed: ["rate<0.05"], // aceita até 5% de falha
+    http_req_duration: ["p(95)<500"], // 95% das requisições abaixo de 500ms
   },
 };
 
