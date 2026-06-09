@@ -101,7 +101,7 @@ senha_hash = await anyio.to_thread.run_sync(
 | Taxa de sucesso HTTP | 99,97% |
 | Falhas HTTP | 1 falha em 3.167 requisições (`http_req_failed = 0,03%`) |
 | Tipo de execução | Local, com relatório via console por expiração de token cloud |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
 
 ### 3.6 Análise Comparativa do Serviço 1
 
@@ -179,7 +179,7 @@ async def listar_pontos(limit: int = 20, skip: int = 0):
 | Falhas HTTP | 0 falhas em 39.421 requisições |
 | Volume total de dados trafegados | 627 MB |
 | Taxa média de tráfego | 3,5 MB/s |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
 
 
 
