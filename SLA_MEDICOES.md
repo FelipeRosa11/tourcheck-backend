@@ -55,9 +55,6 @@ Essa estratégia permite mapear melhor a rampa de degradação sutil do serviço
 | Taxa de sucesso HTTP | 99,82% |
 | Falhas HTTP | 1 falha |
 | Violação de SLA ideal | 75% das requisições acima de 500ms |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
-
-<img width="1487" height="548" alt="image" src="https://github.com/user-attachments/assets/e748012d-c2b1-45da-8fe7-417d839f95db" />
 
 
 ### 3.3 Gargalos Identificados na Medição 1
@@ -104,6 +101,7 @@ senha_hash = await anyio.to_thread.run_sync(
 | Taxa de sucesso HTTP | 99,97% |
 | Falhas HTTP | 1 falha em 3.167 requisições (`http_req_failed = 0,03%`) |
 | Tipo de execução | Local, com relatório via console por expiração de token cloud |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
 
 ### 3.6 Análise Comparativa do Serviço 1
 
@@ -136,9 +134,6 @@ Ao mesmo tempo, o aumento de latência confirmou o comportamento CPU-bound esper
 | Pico máximo de latência | 1,9s |
 | Dados trafegados | 62 MB |
 | Erros HTTP | 0,00% |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
-
-<img width="1492" height="466" alt="image" src="https://github.com/user-attachments/assets/e255bb93-ff1b-40da-9564-c169743b5933" />
 
 
 ### 4.3 Gargalos Identificados na Medição 1
@@ -184,6 +179,9 @@ async def listar_pontos(limit: int = 20, skip: int = 0):
 | Falhas HTTP | 0 falhas em 39.421 requisições |
 | Volume total de dados trafegados | 627 MB |
 | Taxa média de tráfego | 3,5 MB/s |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
+
+
 
 ### 4.6 Análise Comparativa do Serviço 2
 
@@ -193,15 +191,15 @@ O ganho mais claro ocorreu nas latências: a latência média caiu de 121,4ms pa
 
 ---
 
-## 5. Gráficos Comparativos
+## 5. Gráficos medições 2
 
 ### 5.1 Cadastro de Usuários
 
-![Gráfico comparativo do cadastro de usuários](imagens/cadastro_grafico.png)
+<img width="1487" height="548" alt="image" src="https://github.com/user-attachments/assets/e748012d-c2b1-45da-8fe7-417d839f95db" />
 
 ### 5.2 Listagem Pública de Pontos Turísticos
 
-![Gráfico comparativo da busca de pontos turísticos](imagens/busca_grafico.png)
+<img width="1492" height="466" alt="image" src="https://github.com/user-attachments/assets/e255bb93-ff1b-40da-9564-c169743b5933" />
 
 ---
 
