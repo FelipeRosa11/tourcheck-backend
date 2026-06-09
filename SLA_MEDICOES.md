@@ -55,7 +55,10 @@ Essa estratégia permite mapear melhor a rampa de degradação sutil do serviço
 | Taxa de sucesso HTTP | 99,82% |
 | Falhas HTTP | 1 falha |
 | Violação de SLA ideal | 75% das requisições acima de 500ms |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7655028> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
+
+<img width="1487" height="548" alt="image" src="https://github.com/user-attachments/assets/e748012d-c2b1-45da-8fe7-417d839f95db" />
+
 
 ### 3.3 Gargalos Identificados na Medição 1
 
@@ -133,7 +136,10 @@ Ao mesmo tempo, o aumento de latência confirmou o comportamento CPU-bound esper
 | Pico máximo de latência | 1,9s |
 | Dados trafegados | 62 MB |
 | Erros HTTP | 0,00% |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7655058> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
+
+<img width="1492" height="466" alt="image" src="https://github.com/user-attachments/assets/e255bb93-ff1b-40da-9564-c169743b5933" />
+
 
 ### 4.3 Gargalos Identificados na Medição 1
 
