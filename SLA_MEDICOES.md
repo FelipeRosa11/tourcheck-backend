@@ -55,7 +55,7 @@ Essa estratégia permite mapear melhor a rampa de degradação sutil do serviço
 | Taxa de sucesso HTTP | 99,82% |
 | Falhas HTTP | 1 falha |
 | Violação de SLA ideal | 75% das requisições acima de 500ms |
-| Link da medição oficial |  https://feliperosamartins1111.grafana.net/a/k6-app/runs/7655028 |
+| Link da medição oficial |  https://feliperosamartins1111.grafana.net/goto/s57vcl?orgId=stacks-1674150 |
 
 ### 3.3 Gargalos Identificados na Medição 1
 
