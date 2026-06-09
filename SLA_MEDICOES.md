@@ -101,7 +101,7 @@ senha_hash = await anyio.to_thread.run_sync(
 | Taxa de sucesso HTTP | 99,97% |
 | Falhas HTTP | 1 falha em 3.167 requisições (`http_req_failed = 0,03%`) |
 | Tipo de execução | Local, com relatório via console por expiração de token cloud |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722288?tab=thresholds> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/goto/sclp7d?orgId=stacks-1674150> |
 
 ### 3.6 Análise Comparativa do Serviço 1
 
