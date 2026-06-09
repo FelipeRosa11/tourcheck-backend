@@ -179,7 +179,7 @@ async def listar_pontos(limit: int = 20, skip: int = 0):
 | Falhas HTTP | 0 falhas em 39.421 requisições |
 | Volume total de dados trafegados | 627 MB |
 | Taxa média de tráfego | 3,5 MB/s |
-| Link oficial | <https://feliperosamartins1111.grafana.net/a/k6-app/runs/7722279> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/goto/s2s26s?orgId=stacks-1674150> |
 
 
 
