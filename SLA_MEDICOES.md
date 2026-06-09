@@ -134,7 +134,7 @@ Ao mesmo tempo, o aumento de latência confirmou o comportamento CPU-bound esper
 | Pico máximo de latência | 1,9s |
 | Dados trafegados | 62 MB |
 | Erros HTTP | 0,00% |
-| Link da medição oficial | (https://feliperosamartins1111.grafana.net/goto/s2s26s?orgId=stacks-1674150) |
+| Link da medição oficial | (https://feliperosamartins1111.grafana.net/dashboard/snapshot/RPTHTT9gsWO02fMfF5pNuMmz1aZSyaoW) |
 
 ### 4.3 Gargalos Identificados na Medição 1
 
