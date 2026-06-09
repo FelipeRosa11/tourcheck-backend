@@ -55,7 +55,7 @@ Essa estratégia permite mapear melhor a rampa de degradação sutil do serviço
 | Taxa de sucesso HTTP | 99,82% |
 | Falhas HTTP | 1 falha |
 | Violação de SLA ideal | 75% das requisições acima de 500ms |
-| Link da medição oficial |  https://feliperosamartins1111.grafana.net/goto/s57vcl?orgId=stacks-1674150 |
+| Link da medição oficial |  https://feliperosamartins1111.grafana.net/dashboard/snapshot/Qd0UXbdqJZqC70zTtSIH0Kb1uA0yGLyr |
 
 ### 3.3 Gargalos Identificados na Medição 1
 
@@ -101,7 +101,7 @@ senha_hash = await anyio.to_thread.run_sync(
 | Taxa de sucesso HTTP | 99,97% |
 | Falhas HTTP | 1 falha em 3.167 requisições (`http_req_failed = 0,03%`) |
 | Tipo de execução | Local, com relatório via console por expiração de token cloud |
-| Link oficial | <https://feliperosamartins1111.grafana.net/goto/sclp7d?orgId=stacks-1674150> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/dashboard/snapshot/D6OwqKDYSvWV4AxyEJA1nviIJ11vIWkv> |
 
 ### 3.6 Análise Comparativa do Serviço 1
 
@@ -134,7 +134,7 @@ Ao mesmo tempo, o aumento de latência confirmou o comportamento CPU-bound esper
 | Pico máximo de latência | 1,9s |
 | Dados trafegados | 62 MB |
 | Erros HTTP | 0,00% |
-| Link da medição oficial | (https://feliperosamartins1111.grafana.net/goto/smcfq9?orgId=stacks-1674150) |
+| Link da medição oficial | (https://feliperosamartins1111.grafana.net/goto/s2s26s?orgId=stacks-1674150) |
 
 ### 4.3 Gargalos Identificados na Medição 1
 
@@ -179,7 +179,7 @@ async def listar_pontos(limit: int = 20, skip: int = 0):
 | Falhas HTTP | 0 falhas em 39.421 requisições |
 | Volume total de dados trafegados | 627 MB |
 | Taxa média de tráfego | 3,5 MB/s |
-| Link oficial | <https://feliperosamartins1111.grafana.net/goto/s2s26s?orgId=stacks-1674150> |
+| Link oficial | <https://feliperosamartins1111.grafana.net/dashboard/snapshot/BQ1EV5BwOIEZpbyyykVOkfy20KxM4LqA> |
 
 
 
