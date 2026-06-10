@@ -46,6 +46,7 @@ class AvaliacaoResponse(BaseModel):
 
     id: int
     usuario_id: int
+    usuario_nome: str | None = None
     ponto_id: int
     nota: int
     comentario: str | None

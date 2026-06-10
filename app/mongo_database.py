@@ -95,7 +95,24 @@ class MongoDatabase:
     def _ponto_view(self, doc: dict[str, Any] | None) -> SimpleNamespace | None:
         if doc is None:
             return None
-        doc = {**doc, "avaliacoes": doc.get("avaliacoes", [])}
+        avaliacoes = doc.get("avaliacoes", [])
+        usuarios_ids = {
+            avaliacao.get("usuario_id")
+            for avaliacao in avaliacoes
+            if avaliacao.get("usuario_id") is not None and not avaliacao.get("usuario_nome")
+        }
+        usuarios_por_id = {
+            usuario["id"]: usuario.get("nome")
+            for usuario in self.usuarios.find({"id": {"$in": list(usuarios_ids)}}, {"id": 1, "nome": 1})
+        }
+        avaliacoes = [
+            {
+                **avaliacao,
+                "usuario_nome": avaliacao.get("usuario_nome") or usuarios_por_id.get(avaliacao.get("usuario_id")),
+            }
+            for avaliacao in avaliacoes
+        ]
+        doc = {**doc, "avaliacoes": avaliacoes}
         return _view(doc)
 
     def ponto_by_id(self, ponto_id: int) -> SimpleNamespace | None:
@@ -220,6 +237,7 @@ class MongoDatabase:
             avaliacao = {
                 "id": self.next_id("avaliacoes"),
                 "usuario_id": usuario_id,
+                "usuario_nome": getattr(self.usuario_by_id(usuario_id), "nome", None),
                 "ponto_id": ponto_id,
                 "nota": nota,
                 "comentario": comentario,
@@ -230,7 +248,13 @@ class MongoDatabase:
 
         self.pontos.update_one(
             {"id": ponto_id, "avaliacoes.usuario_id": usuario_id},
-            {"$set": {"avaliacoes.$.nota": nota, "avaliacoes.$.comentario": comentario}},
+            {
+                "$set": {
+                    "avaliacoes.$.nota": nota,
+                    "avaliacoes.$.comentario": comentario,
+                    "avaliacoes.$.usuario_nome": getattr(self.usuario_by_id(usuario_id), "nome", None),
+                }
+            },
         )
         atualizado = self.pontos.find_one(
             {"id": ponto_id, "avaliacoes.usuario_id": usuario_id},

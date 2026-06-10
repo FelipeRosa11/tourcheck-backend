@@ -58,6 +58,9 @@ def montar_ponto_response(ponto: PontoTuristico, salvo: bool = False) -> PontoRe
                 {
                     "id": a.id,
                     "usuario_id": a.usuario_id,
+                    "usuario_nome": getattr(getattr(a, "usuario", None), "nome", None)
+                    or getattr(a, "usuario_nome", None)
+                    or f"Usuario {a.usuario_id}",
                     "ponto_id": a.ponto_id,
                     "nota": a.nota,
                     "comentario": a.comentario,
@@ -78,7 +81,7 @@ def buscar_ponto_ou_404(db: Session, ponto_id: int) -> PontoTuristico:
 
     ponto = (
         db.query(PontoTuristico)
-        .options(selectinload(PontoTuristico.avaliacoes))
+        .options(selectinload(PontoTuristico.avaliacoes).selectinload(Avaliacao.usuario))
         .filter(PontoTuristico.id == ponto_id)
         .first()
     )
@@ -127,7 +130,9 @@ def listar_pontos(
             respostas.sort(key=lambda ponto: (ponto.media_avaliacoes, ponto.total_avaliacoes))
         return respostas
 
-    consulta = db.query(PontoTuristico).options(selectinload(PontoTuristico.avaliacoes))
+    consulta = db.query(PontoTuristico).options(
+        selectinload(PontoTuristico.avaliacoes).selectinload(Avaliacao.usuario)
+    )
 
     usuario = obter_usuario_opcional(credenciais, db)
     if incluir_pendentes and (usuario is None or usuario.tipo != TipoUsuario.ADMIN):
@@ -182,7 +187,11 @@ def listar_pontos_salvos(
     salvos = (
         db.query(PontoSalvo)
         .join(PontoSalvo.ponto)
-        .options(selectinload(PontoSalvo.ponto).selectinload(PontoTuristico.avaliacoes))
+        .options(
+            selectinload(PontoSalvo.ponto)
+            .selectinload(PontoTuristico.avaliacoes)
+            .selectinload(Avaliacao.usuario)
+        )
         .filter(PontoSalvo.usuario_id == usuario.id, PontoTuristico.status == StatusPonto.APROVADO)
         .order_by(PontoSalvo.criado_em.desc())
         .all()

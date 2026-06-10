@@ -33,9 +33,9 @@
         a { color: #1a6b3a; }
 
         .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
-        .panel img { width: 100%; max-height: 360px; object-fit: cover; }
+        .panel img { width: 100%; max-height: 360px; object-fit: contain; background: #eef7ef; }
         .galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; padding: 8px; background: #eef7ef; }
-        .galeria img { height: 180px; max-height: 180px; border-radius: 6px; }
+        .galeria img { height: 180px; max-height: 180px; border-radius: 6px; object-fit: contain; }
         .content { padding: 18px; }
         .muted { color: #64748b; font-size: 14px; }
         .status-badge {
@@ -54,6 +54,8 @@
             border-radius: 6px; font-size: 14px; margin-right: 6px;
         }
         .avaliacao-box input[type="text"] { width: 240px; }
+        .nota-linha { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nota-preview { min-width: 88px; color: #d97706; font-size: 16px; }
 
         /* Lista de comentários */
         .comentarios { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
@@ -63,9 +65,9 @@
             border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;
             display: flex; justify-content: space-between; align-items: flex-start;
         }
-        .comentario-item .nota { font-weight: bold; margin-bottom: 4px; }
+        .comentario-item .meta { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+        .comentario-item .nota { font-weight: bold; margin-bottom: 4px; color: #d97706; }
         .comentario-item .texto { font-size: 14px; color: #374151; }
-        .comentario-item .data { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         #mensagem-avaliacao { margin-top: 10px; font-size: 14px; font-weight: bold; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
     </style>
@@ -123,6 +125,24 @@
 
         function estrelas(nota) {
             return '⭐'.repeat(nota)
+        }
+
+        function opcoesNota() {
+            return [1, 2, 3, 4, 5]
+                .map(nota => `<option value="${nota}">${nota} ${estrelas(nota)}</option>`)
+                .join('')
+        }
+
+        function atualizarPreviaNota(select, previewId) {
+            const preview = document.getElementById(previewId)
+            if (!preview) return
+            const nota = parseInt(select.value)
+            preview.textContent = nota ? estrelas(nota) : ''
+        }
+
+        function formatarData(data) {
+            if (!data) return 'Data nao informada'
+            return new Date(data).toLocaleDateString('pt-BR')
         }
 
         async function apagarAvaliacao(pontoId, avaliacaoId) {
@@ -251,9 +271,9 @@
                         item.className = 'comentario-item'
                         item.innerHTML = `
                             <div>
+                                <div class="meta">${escaparHtml(av.usuario_nome || ('Usuario ' + av.usuario_id))} - ${formatarData(av.criado_em)}</div>
                                 <div class="nota">${estrelas(av.nota)} (${av.nota}/5)</div>
                                 <div class="texto">${escaparHtml(av.comentario || '(sem comentário)')}</div>
-                                <div class="data">${new Date(av.criado_em).toLocaleDateString('pt-BR')}</div>
                             </div>
                             ${isAdmin
                                 ? `<button class="danger" onclick="apagarAvaliacao(${ponto.id}, ${av.id})">🗑 Apagar</button>`
@@ -285,6 +305,14 @@
                         <p id="mensagem-avaliacao"></p>
                     `
                     secaoAvaliacoes.appendChild(divForm)
+                    const selectNota = document.getElementById('nota-input')
+                    const previewNota = document.createElement('span')
+                    previewNota.id = 'nota-preview'
+                    previewNota.className = 'nota-preview'
+                    previewNota.setAttribute('aria-live', 'polite')
+                    selectNota.innerHTML = '<option value="">-- Nota --</option>' + opcoesNota()
+                    selectNota.parentNode.insertBefore(previewNota, selectNota.nextSibling)
+                    selectNota.addEventListener('change', () => atualizarPreviaNota(selectNota, 'nota-preview'))
                 } else if (!token) {
                     secaoAvaliacoes.innerHTML += '<p><a href="/login">Faça login para avaliar</a></p>'
                 }
