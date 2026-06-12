@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ponto Turistico - TourCheck</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; margin: 0; background: #f5f7fb; color: #010501; }
+        header {
+            display: flex; align-items: center; justify-content: right;
+            padding: 12px 24px; background: #1a6b3a; border-bottom: 1px solid #145c30;
+        }
+        .header-brand {
+            display: flex; align-items: center; gap: 10px;
+            position: absolute; left: 50%; transform: translateX(-50%);
+        }
+        .header-brand img { height: 36px; width: 36px; object-fit: contain; }
+        .header-brand span { color: #fff; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        button, .button {
+            border: 0; border-radius: 6px; padding: 9px 16px;
+            background: #1a6b3a; color: white; cursor: pointer;
+            text-decoration: none; font-size: 14px; display: inline-block;
+        }
+        button.secondary, .button.secondary {
+            background: rgba(255,255,255,0.15); color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        button.danger { background: #c0392b; }
+        #btn-logout { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); }
+
+        main { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+        a { color: #1a6b3a; }
+
+        .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
+        .panel img { width: 100%; max-height: 360px; object-fit: contain; background: #eef7ef; }
+        .galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; padding: 8px; background: #eef7ef; }
+        .galeria img { height: 180px; max-height: 180px; border-radius: 6px; object-fit: contain; }
+        .content { padding: 18px; }
+        .muted { color: #64748b; font-size: 14px; }
+        .status-badge {
+            display: inline-block; padding: 4px 10px;
+            border-radius: 999px; background: #e5e7eb; font-size: 13px;
+        }
+
+        /* Avaliação */
+        .avaliacao-box {
+            margin-top: 24px; padding-top: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .avaliacao-box h3 { margin: 0 0 12px; font-size: 16px; }
+        .avaliacao-box select, .avaliacao-box input[type="text"] {
+            padding: 8px 10px; border: 1px solid #cbd5e1;
+            border-radius: 6px; font-size: 14px; margin-right: 6px;
+        }
+        .avaliacao-box input[type="text"] { width: 240px; }
+        .nota-linha { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nota-preview { min-width: 88px; color: #d97706; font-size: 16px; }
+
+        /* Lista de comentários */
+        .comentarios { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+        .comentarios h3 { margin: 0 0 12px; font-size: 16px; }
+        .comentario-item {
+            background: #f0faf1; border: 1px solid #c8e6c9;
+            border-radius: 6px; padding: 10px 14px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .comentario-item .meta { font-size: 12px; color: #64748b; margin-bottom: 4px; }
+        .comentario-item .nota { font-weight: bold; margin-bottom: 4px; color: #d97706; }
+        .comentario-item .texto { font-size: 14px; color: #374151; }
+        #mensagem-avaliacao { margin-top: 10px; font-size: 14px; font-weight: bold; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <span><a href="/" style="text-decoration:none;color:inherit;">TourCheck</a></span>
+            <img src="https://i.imgur.com/5WSo4a3.png" referrerpolicy="no-referrer" alt="TourCheck logo">        
+        </div>
+        <div class="header-actions">
+            <span id="botoes-auth">
+                <a class="button secondary" href="/login">Login</a>
+                <a class="button secondary" href="/cadastro" style="margin-left:8px">Registrar</a>
+            </span>
+            <a id="link-admin" class="button secondary" href="/admin" style="display:none">Admin</a>
+            <button id="btn-logout" style="display:none" onclick="logout()">Sair</button>
+        </div>
+    </header>
+
+    <main>
+        <p><a href="/">← Voltar</a></p>
+        <p id="mensagem">Carregando ponto...</p>
+        <article id="ponto" class="panel" style="display:none"></article>
+        <div id="secao-avaliacoes" style="display:none"></div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('access_token')
+        const tipoUsuario = localStorage.getItem('tipo_usuario') || ''
+        const isAdmin = tipoUsuario === 'admin'
+
+        if (token) {
+            document.getElementById('botoes-auth').style.display = 'none'
+            document.getElementById('btn-logout').style.display = 'inline'
+            if (isAdmin) document.getElementById('link-admin').style.display = 'inline'
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('tipo_usuario')
+            window.location.href = '/login'
+        }
+
+        function escaparHtml(valor) {
+            const div = document.createElement('div')
+            div.textContent = valor || ''
+            return div.innerHTML
+        }
+
+        function obterIdDaUrl() {
+            const partes = window.location.pathname.split('/').filter(Boolean)
+            return partes[1]
+        }
+
+        function estrelas(nota) {
+            return '⭐'.repeat(nota)
+        }
+
+        function opcoesNota() {
+            return [1, 2, 3, 4, 5]
+                .map(nota => `<option value="${nota}">${nota} ${estrelas(nota)}</option>`)
+                .join('')
+        }
+
+        function atualizarPreviaNota(select, previewId) {
+            const preview = document.getElementById(previewId)
+            if (!preview) return
+            const nota = parseInt(select.value)
+            preview.textContent = nota ? estrelas(nota) : ''
+        }
+
+        function formatarData(data) {
+            if (!data) return 'Data nao informada'
+            return new Date(data).toLocaleDateString('pt-BR')
+        }
+
+        async function apagarAvaliacao(pontoId, avaliacaoId) {
+            if (!confirm('Apagar esta avaliação?')) return
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                alert('Avaliação apagada.')
+                carregarPonto()
+            } else {
+                alert('Erro ao apagar avaliação.')
+            }
+        }
+
+        async function avaliarPonto(pontoId) {
+            if (!token) {
+                alert('Faça login para avaliar.')
+                window.location.href = '/login'
+                return
+            }
+            const nota = document.getElementById('nota-input').value
+            const comentario = document.getElementById('comentario-input').value
+
+            if (!nota) { alert('Selecione uma nota.'); return }
+
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ nota: parseInt(nota), comentario: comentario || null })
+            })
+
+            const resultado = await resposta.json()
+            const msgEl = document.getElementById('mensagem-avaliacao')
+
+            if (resposta.ok) {
+                msgEl.textContent = 'Avaliação enviada! Se já havia avaliado, foi atualizada.'
+                msgEl.style.color = 'green'
+                setTimeout(() => carregarPonto(), 800)
+            } else {
+                msgEl.textContent = resultado.detail || 'Erro ao avaliar.'
+                msgEl.style.color = 'red'
+            }
+        }
+
+        async function alterarPontoSalvo(pontoId, salvar) {
+            if (!token) {
+                alert('Faca login para salvar pontos.')
+                window.location.href = '/login'
+                return
+            }
+            const resposta = await fetch(`/pontos/${pontoId}/salvar`, {
+                method: salvar ? 'POST' : 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                carregarPonto()
+            } else {
+                alert('Nao foi possivel atualizar seus pontos salvos.')
+            }
+        }
+
+        async function carregarPonto() {
+            const id = obterIdDaUrl()
+            const mensagem = document.getElementById('mensagem')
+            const container = document.getElementById('ponto')
+            const secaoAvaliacoes = document.getElementById('secao-avaliacoes')
+
+            try {
+                const resposta = await fetch(`/pontos/${id}`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                })
+                const ponto = await resposta.json()
+
+                if (!resposta.ok) {
+                    mensagem.textContent = ponto.detail || 'Ponto turístico não encontrado.'
+                    return
+                }
+
+                document.title = `${ponto.nome} - TourCheck`
+                mensagem.style.display = 'none'
+                container.style.display = 'block'
+
+                const imagens = ponto.imagens_urls && ponto.imagens_urls.length ? ponto.imagens_urls : (ponto.imagem_url ? [ponto.imagem_url] : [])
+                container.innerHTML = `
+                    ${imagens.length
+                        ? `<div class="galeria">${imagens.map((url, indice) => `<img src="${escaparHtml(url)}" referrerpolicy="no-referrer" alt="${escaparHtml(ponto.nome)} ${indice + 1}">`).join('')}</div>`
+                        : ''
+                    }
+                    <div class="content">
+                        <h1>${escaparHtml(ponto.nome)}</h1>
+                        <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
+                        <p>${escaparHtml(ponto.descricao)}</p>
+                        ${ponto.endereco ? `<p><strong>Endereço:</strong> ${escaparHtml(ponto.endereco)}</p>` : ''}
+                        <p><strong>Avaliação média:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliação/avaliações)</p>
+                        ${token ? `
+                            <div class="actions">
+                                <button onclick="alterarPontoSalvo(${ponto.id}, ${!ponto.salvo})">
+                                    ${ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'}
+                                </button>
+                                <a class="button" href="/ponto_cadastro?editar=${ponto.id}">Editar ponto</a>
+                            </div>
+                        ` : ''}
+                        <span class="status-badge">Status: ${escaparHtml(ponto.status)}</span>
+                    </div>
+                `
+
+                // ── Seção de avaliações ──────────────────────────
+                secaoAvaliacoes.style.display = 'block'
+                secaoAvaliacoes.innerHTML = ''
+
+                // Lista de comentários existentes
+                const divComentarios = document.createElement('div')
+                divComentarios.className = 'comentarios'
+                divComentarios.innerHTML = `<h3>Comentários (${ponto.avaliacoes.length})</h3>`
+
+                if (ponto.avaliacoes.length === 0) {
+                    divComentarios.innerHTML += '<p class="muted">Nenhum comentário ainda.</p>'
+                } else {
+                    ponto.avaliacoes.forEach(av => {
+                        const item = document.createElement('div')
+                        item.className = 'comentario-item'
+                        item.innerHTML = `
+                            <div>
+                                <div class="meta">${escaparHtml(av.usuario_nome || ('Usuario ' + av.usuario_id))} - ${formatarData(av.criado_em)}</div>
+                                <div class="nota">${estrelas(av.nota)} (${av.nota}/5)</div>
+                                <div class="texto">${escaparHtml(av.comentario || '(sem comentário)')}</div>
+                            </div>
+                            ${isAdmin
+                                ? `<button class="danger" onclick="apagarAvaliacao(${ponto.id}, ${av.id})">🗑 Apagar</button>`
+                                : ''
+                            }
+                        `
+                        divComentarios.appendChild(item)
+                    })
+                }
+                secaoAvaliacoes.appendChild(divComentarios)
+
+                // Formulário de avaliação — só para logados
+                if (token && ponto.status === 'aprovado') {
+                    const divForm = document.createElement('div')
+                    divForm.className = 'avaliacao-box'
+                    divForm.innerHTML = `
+                        <h3>Deixar avaliação</h3>
+                        <p class="muted" style="margin:0 0 10px">Se já avaliou este ponto, sua nota anterior será substituída.</p>
+                        <select id="nota-input">
+                            <option value="">-- Nota --</option>
+                            <option value="1">1 ⭐</option>
+                            <option value="2">2 ⭐</option>
+                            <option value="3">3 ⭐</option>
+                            <option value="4">4 ⭐</option>
+                            <option value="5">5 ⭐</option>
+                        </select>
+                        <input type="text" id="comentario-input" placeholder="Comentário (opcional)">
+                        <button onclick="avaliarPonto(${ponto.id})">Enviar</button>
+                        <p id="mensagem-avaliacao"></p>
+                    `
+                    secaoAvaliacoes.appendChild(divForm)
+                    const selectNota = document.getElementById('nota-input')
+                    const previewNota = document.createElement('span')
+                    previewNota.id = 'nota-preview'
+                    previewNota.className = 'nota-preview'
+                    previewNota.setAttribute('aria-live', 'polite')
+                    selectNota.innerHTML = '<option value="">-- Nota --</option>' + opcoesNota()
+                    selectNota.parentNode.insertBefore(previewNota, selectNota.nextSibling)
+                    selectNota.addEventListener('change', () => atualizarPreviaNota(selectNota, 'nota-preview'))
+                } else if (!token) {
+                    secaoAvaliacoes.innerHTML += '<p><a href="/login">Faça login para avaliar</a></p>'
+                }
+
+            } catch (erro) {
+                mensagem.textContent = 'Erro de conexão com o servidor.'
+            }
+        }
+
+        carregarPonto()
+    </script>
+</body>
+</html>

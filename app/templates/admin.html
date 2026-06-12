@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administracao - TourCheck</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+        header { display: flex; gap: 12px; align-items: center; padding: 16px 24px; background: #ffffff; border-bottom: 1px solid #d9e0ea; }
+        main { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+        a { color: #2563eb; }
+        button, select { border-radius: 6px; padding: 8px 10px; font: inherit; }
+        button { border: 0; background: #2563eb; color: white; cursor: pointer; }
+        button.secondary { background: #e5e7eb; color: #111827; }
+        button.danger { background: #dc2626; }
+        .section { margin-top: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+        .card, table { background: white; border: 1px solid #d9e0ea; border-radius: 8px; }
+        .card { padding: 14px; }
+        .card h3 { margin: 0 0 8px; }
+        .muted { color: #64748b; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        table { width: 100%; border-collapse: collapse; overflow: hidden; }
+        th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        tr:last-child td { border-bottom: 0; }
+        #mensagem { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/">Inicio</a>
+        <button class="secondary" onclick="logout()">Sair</button>
+    </header>
+
+    <main>
+        <h1>Administracao</h1>
+        <p id="mensagem">Validando acesso...</p>
+
+        <section id="primeiro-admin" class="section card" style="display:none">
+            <h2>Ativar primeiro administrador</h2>
+            <p class="muted">Use esta opcao apenas se o sistema ainda nao tiver nenhum administrador.</p>
+            <div class="actions">
+                <input id="email-primeiro-admin" type="email" placeholder="email cadastrado" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <button onclick="criarPrimeiroAdmin()">Ativar admin</button>
+            </div>
+        </section>
+
+        <section id="conteudo" style="display:none">
+            <div class="section">
+                <h2>Pontos pendentes</h2>
+                <div id="pontos-pendentes" class="grid"></div>
+            </div>
+
+            <div class="section">
+                <h2>Edicoes pendentes</h2>
+                <div id="edicoes-pendentes" class="grid"></div>
+            </div>
+
+            <div class="section">
+                <h2>Comentarios</h2>
+                <div id="comentarios" class="grid"></div>
+            </div>
+
+            <div class="section">
+                <h2>Usuarios</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Tipo</th>
+                            <th>Acao</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuarios"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('access_token')
+        const mensagem = document.getElementById('mensagem')
+
+        if (!token) {
+            window.location.href = '/login'
+        } else {
+            verificarAcessoAdmin()
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('tipo_usuario')
+            window.location.href = '/login'
+        }
+
+        async function verificarAcessoAdmin() {
+            try {
+                const resposta = await fetch('/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                if (!resposta.ok) {
+                    logout()
+                    return
+                }
+
+                const usuario = await resposta.json()
+                const tipo = String(usuario.tipo || '').toLowerCase()
+                localStorage.setItem('tipo_usuario', tipo)
+
+                if (tipo !== 'admin') {
+                    mensagem.textContent = 'Acesso permitido apenas para administradores.'
+                    mensagem.style.color = 'red'
+                    document.getElementById('primeiro-admin').style.display = 'block'
+                    return
+                }
+
+                document.getElementById('conteudo').style.display = 'block'
+                mensagem.textContent = ''
+                carregarPainel()
+            } catch (erro) {
+                mensagem.textContent = 'Erro ao validar acesso.'
+                mensagem.style.color = 'red'
+            }
+        }
+
+        function escaparHtml(valor) {
+            const div = document.createElement('div')
+            div.textContent = valor || ''
+            return div.innerHTML
+        }
+
+        async function api(url, opcoes = {}) {
+            const resposta = await fetch(url, {
+                ...opcoes,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    ...(opcoes.headers || {})
+                }
+            })
+            const texto = await resposta.text()
+            const dados = texto ? JSON.parse(texto) : null
+            if (!resposta.ok) {
+                throw new Error(dados?.detail || 'Erro na operacao.')
+            }
+            return dados
+        }
+
+        async function carregarPainel() {
+            await Promise.all([carregarPontosPendentes(), carregarEdicoesPendentes(), carregarComentarios(), carregarUsuarios()])
+        }
+
+        async function carregarPontosPendentes() {
+            const container = document.getElementById('pontos-pendentes')
+            container.innerHTML = '<p>Carregando...</p>'
+
+            try {
+                const pontos = await api('/admin/api/pontos?status_ponto=pendente')
+                if (pontos.length === 0) {
+                    container.innerHTML = '<p class="muted">Nenhum ponto pendente.</p>'
+                    return
+                }
+
+                container.innerHTML = ''
+                pontos.forEach(ponto => {
+                    const card = document.createElement('article')
+                    card.className = 'card'
+                    card.innerHTML = `
+                        <h3>${escaparHtml(ponto.nome)}</h3>
+                        <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
+                        <p>${escaparHtml(ponto.descricao)}</p>
+                        <div class="actions">
+                            <a href="/ponto/${ponto.id}">Ver detalhes</a>
+                            <button onclick="aprovarPonto(${ponto.id})">Aprovar</button>
+                            <button class="danger" onclick="rejeitarPonto(${ponto.id})">Rejeitar</button>
+                        </div>
+                    `
+                    container.appendChild(card)
+                })
+            } catch (erro) {
+                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+            }
+        }
+
+        async function aprovarPonto(id) {
+            await api(`/pontos/${id}/aprovar`, { method: 'PATCH' })
+            carregarPontosPendentes()
+        }
+
+        async function rejeitarPonto(id) {
+            await api(`/pontos/${id}/rejeitar`, { method: 'PATCH' })
+            carregarPontosPendentes()
+        }
+
+        function resumoEdicao(dados) {
+            const campos = ['nome', 'descricao', 'categoria', 'cidade', 'bairro', 'endereco', 'imagem_url']
+            return campos
+                .filter(campo => dados[campo] !== undefined && dados[campo] !== null && dados[campo] !== '')
+                .map(campo => `<p><strong>${campo}:</strong> ${escaparHtml(String(dados[campo]))}</p>`)
+                .join('') || '<p class="muted">Sem campos alterados.</p>'
+        }
+
+        async function carregarEdicoesPendentes() {
+            const container = document.getElementById('edicoes-pendentes')
+            container.innerHTML = '<p>Carregando...</p>'
+
+            try {
+                const edicoes = await api('/admin/api/edicoes-pendentes')
+                if (edicoes.length === 0) {
+                    container.innerHTML = '<p class="muted">Nenhuma edicao pendente.</p>'
+                    return
+                }
+
+                container.innerHTML = ''
+                edicoes.forEach(edicao => {
+                    const ponto = edicao.ponto
+                    const card = document.createElement('article')
+                    card.className = 'card'
+                    card.innerHTML = `
+                        <h3>${escaparHtml(ponto.nome)}</h3>
+                        <p class="muted">Solicitado por usuario #${edicao.solicitado_por_id}</p>
+                        ${resumoEdicao(edicao.dados || {})}
+                        <div class="actions">
+                            <a href="/ponto/${ponto.id}">Ver versao atual</a>
+                            <button onclick="aprovarEdicao(${ponto.id})">Aprovar edicao</button>
+                            <button class="danger" onclick="rejeitarEdicao(${ponto.id})">Rejeitar edicao</button>
+                        </div>
+                    `
+                    container.appendChild(card)
+                })
+            } catch (erro) {
+                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+            }
+        }
+
+        async function aprovarEdicao(id) {
+            await api(`/admin/api/edicoes-pendentes/${id}/aprovar`, { method: 'PATCH' })
+            carregarEdicoesPendentes()
+        }
+
+        async function rejeitarEdicao(id) {
+            await api(`/admin/api/edicoes-pendentes/${id}/rejeitar`, { method: 'PATCH' })
+            carregarEdicoesPendentes()
+        }
+
+        async function carregarComentarios() {
+            const container = document.getElementById('comentarios')
+            container.innerHTML = '<p>Carregando...</p>'
+
+            try {
+                const pontos = await api('/admin/api/pontos')
+                const comentarios = []
+                pontos.forEach(ponto => {
+                    ;(ponto.avaliacoes || []).forEach(avaliacao => {
+                        comentarios.push({ ponto, avaliacao })
+                    })
+                })
+
+                if (comentarios.length === 0) {
+                    container.innerHTML = '<p class="muted">Nenhum comentario cadastrado.</p>'
+                    return
+                }
+
+                container.innerHTML = ''
+                comentarios.forEach(({ ponto, avaliacao }) => {
+                    const card = document.createElement('article')
+                    card.className = 'card'
+                    card.innerHTML = `
+                        <h3>${escaparHtml(ponto.nome)}</h3>
+                        <p class="muted">Nota ${avaliacao.nota}/5 - Usuario #${avaliacao.usuario_id}</p>
+                        <p>${escaparHtml(avaliacao.comentario || '(sem comentario)')}</p>
+                        <div class="actions">
+                            <a href="/ponto/${ponto.id}">Ver ponto</a>
+                            <button class="danger" onclick="apagarComentario(${ponto.id}, ${avaliacao.id})">Apagar comentario</button>
+                        </div>
+                    `
+                    container.appendChild(card)
+                })
+            } catch (erro) {
+                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+            }
+        }
+
+        async function apagarComentario(pontoId, avaliacaoId) {
+            if (!confirm('Apagar este comentario?')) return
+            await api(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, { method: 'DELETE' })
+            carregarComentarios()
+        }
+
+        async function carregarUsuarios() {
+            const tbody = document.getElementById('usuarios')
+            tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>'
+
+            try {
+                const usuarios = await api('/admin/api/usuarios')
+                tbody.innerHTML = ''
+                usuarios.forEach(usuario => {
+                    const tr = document.createElement('tr')
+                    const proximoTipo = usuario.tipo === 'admin' ? 'comum' : 'admin'
+                    const textoAcao = usuario.tipo === 'admin' ? 'Remover admin' : 'Tornar admin'
+                    tr.innerHTML = `
+                        <td>${escaparHtml(usuario.nome)}</td>
+                        <td>${escaparHtml(usuario.email)}</td>
+                        <td>${escaparHtml(usuario.tipo)}</td>
+                        <td><button class="secondary" onclick="alterarTipoUsuario(${usuario.id}, '${proximoTipo}')">${textoAcao}</button></td>
+                    `
+                    tbody.appendChild(tr)
+                })
+            } catch (erro) {
+                tbody.innerHTML = `<tr><td colspan="4">${escaparHtml(erro.message)}</td></tr>`
+            }
+        }
+
+        async function alterarTipoUsuario(id, tipo) {
+            await api(`/admin/api/usuarios/${id}/tipo`, {
+                method: 'PATCH',
+                body: JSON.stringify({ tipo })
+            })
+            carregarUsuarios()
+        }
+
+        async function criarPrimeiroAdmin() {
+            const email = document.getElementById('email-primeiro-admin').value.trim()
+            if (!email) {
+                mensagem.textContent = 'Informe o email do usuario cadastrado.'
+                mensagem.style.color = 'red'
+                return
+            }
+
+            try {
+                const resposta = await fetch('/admin/api/primeiro-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                })
+                const dados = await resposta.json()
+                if (!resposta.ok) {
+                    mensagem.textContent = dados.detail || 'Nao foi possivel ativar o administrador.'
+                    mensagem.style.color = 'red'
+                    return
+                }
+                mensagem.textContent = 'Administrador ativado. Faca login novamente para atualizar o acesso.'
+                mensagem.style.color = 'green'
+                localStorage.removeItem('access_token')
+                localStorage.removeItem('tipo_usuario')
+                setTimeout(() => window.location.href = '/login', 1200)
+            } catch (erro) {
+                mensagem.textContent = 'Erro de conexao com o servidor.'
+                mensagem.style.color = 'red'
+            }
+        }
+    </script>
+</body>
+</html>

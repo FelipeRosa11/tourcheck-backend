@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TourCheck</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; margin: 0; background: #f5f7fb; color: #010501; }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            padding: 12px 24px;
+            background: #1a6b3a;
+            border-bottom: 1px solid #145c30;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .header-brand img { height: 36px; width: 36px; object-fit: contain; }
+        .header-brand span { color: #ffffff; font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+
+        button, .button {
+            border: 0; border-radius: 6px; padding: 9px 16px;
+            background: #1a6b3a; color: white; cursor: pointer;
+            text-decoration: none; font-size: 14px; display: inline-block;
+        }
+        button.secondary, .button.secondary {
+            background: rgba(255,255,255,0.15); color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        button.secondary:hover, .button.secondary:hover { background: rgba(255,255,255,0.25); }
+        button.danger { background: #c0392b; color: white; font-size: 13px; padding: 6px 12px; }
+        #btn-logout { background: rgba(255,255,255,0.15); color: #ffffff; border: 1px solid rgba(255,255,255,0.35); }
+
+        main { max-width: 1040px; margin: 0 auto; padding: 28px 20px; }
+        .toolbar { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .toolbar input { flex: 1; min-width: 180px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+        .toolbar select {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        .status { margin-bottom: 16px; color: #64748b; font-size: 14px; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .card-actions button { padding: 7px 12px; font-size: 13px; }
+
+        #lista-pontos { display: flex; flex-direction: column; gap: 14px; }
+
+        .card {
+            background: #e2f3e4; border: 1px solid #d9e0ea;
+            border-radius: 8px; overflow: hidden;
+            display: flex; flex-direction: row;
+        }
+        .card-img-wrap {
+            flex: 0 0 220px; max-width: 220px;
+            min-height: 150px; background: #c8e6c9; overflow: hidden;
+        }
+        .card-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; background: #c8e6c9; }
+        .card-img-placeholder { width: 100%; height: 100%; min-height: 150px; background: #c8e6c9; }
+        .card-content { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .card h3 { margin: 0 0 6px; font-size: 17px; }
+        .muted { color: #64748b; font-size: 14px; }
+        .card p { margin: 6px 0; font-size: 14px; }
+
+        .avaliacao-box {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #c8e6c9;
+        }
+        .avaliacao-box select, .avaliacao-box input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-right: 6px;
+        }
+        .avaliacao-box input[type="text"] { width: 200px; }
+        .nota-linha { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nota-preview { min-width: 88px; color: #d97706; font-size: 16px; }
+
+        .avaliacao-item {
+            background: #f0faf1;
+            border: 1px solid #c8e6c9;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 6px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-brand">
+            <span><a href="/" style="text-decoration: none; color: inherit;">TourCheck</a></span>
+            <img src="https://i.imgur.com/5WSo4a3.png" referrerpolicy="no-referrer" alt="TourCheck logo">
+        </div>
+        <div class="header-actions">
+            <span id="botoes-auth">
+                <a class="button secondary" href="/login">Login</a>
+                <a class="button secondary" href="/cadastro" style="margin-left:8px">Registrar</a>
+            </span>
+            <a id="link-admin" class="button secondary" href="/admin" style="display:none">Admin</a>
+            <button id="btn-logout" style="display:none" onclick="logout()">Sair</button>
+        </div>
+    </header>
+
+    <main>
+        <h1>Pontos Turísticos</h1>
+        <p class="muted">Descubra novos pontos turísticos.</p>
+
+        <form class="toolbar" id="form-busca">
+
+            <input type="search" id="busca" placeholder="Buscar por nome, cidade, bairro ou categoria">
+            <button type="submit">Buscar</button>
+            <select id="filtro-categoria">
+                <option value="">Todas as categorias</option>
+                <option value="Monumento">Monumento</option>
+                <option value="Natureza">Natureza</option>
+                <option value="Parque">Parque</option>
+                <option value="Arte urbana">Arte urbana</option>
+                <option value="Historico">Histórico</option>
+                <option value="Museu">Museu</option>
+                <option value="Aquario">Aquário</option>
+                <option value="Esporte">Esporte</option>
+                <option value="Praia">Praia</option>
+                <option value="Cultura">Cultura</option>
+                <option value="Mirante">Mirante</option>
+                <option value="Trilha">Trilha</option>
+                <option value="Gastronomia">Gastronomia</option>
+                <option value="Entretenimento">Entretenimento</option>
+                <option value="Religioso">Religioso</option>
+                <option value="Outro">Outro</option>
+            </select>
+            <select id="ordenar">
+                <option value="nome">Ordenar por nome</option>
+                <option value="avaliacao_desc">Maior avaliacao</option>
+                <option value="avaliacao_asc">Menor avaliacao</option>
+            </select>
+            <button type="button" class="button" id="btn-salvos" style="display:none" onclick="alternarSalvos()">Meus salvos</button>
+            <a class="button" href="/ponto_cadastro" id="link-cadastrar" style="display:none">Cadastrar Ponto</a>
+        </form>
+
+        <div id="status" class="status"></div>
+        <section id="lista-pontos"></section>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('access_token')
+        let tipoUsuario = localStorage.getItem('tipo_usuario') || ''
+        let buscaAtiva = false
+        let mostrandoSalvos = false
+
+        if (token) {
+            document.getElementById('botoes-auth').style.display = 'none'
+            document.getElementById('btn-logout').style.display = 'inline'
+            verificarPerfil()
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token')
+            localStorage.removeItem('tipo_usuario')
+            window.location.href = '/login'
+        }
+
+        async function verificarPerfil() {
+            try {
+                const resposta = await fetch('/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                if (!resposta.ok) return
+                const usuario = await resposta.json()
+                tipoUsuario = String(usuario.tipo || '').toLowerCase()
+                localStorage.setItem('tipo_usuario', tipoUsuario)
+
+                if (tipoUsuario === 'admin') {
+                    document.getElementById('link-admin').style.display = 'inline'
+                }
+                if (tipoUsuario === 'admin' || tipoUsuario === 'comum') {
+                    document.getElementById('link-cadastrar').style.display = 'inline'
+                    document.getElementById('btn-salvos').style.display = 'inline-block'
+                }
+            } catch (erro) {
+                console.error('Nao foi possivel verificar perfil.', erro)
+            }
+        }
+
+        function escaparHtml(valor) {
+            const div = document.createElement('div')
+            div.textContent = valor || ''
+            return div.innerHTML
+        }
+
+        function estrelas(nota) {
+            return '\u2b50'.repeat(nota)
+        }
+
+        function opcoesNota() {
+            return [1, 2, 3, 4, 5]
+                .map(nota => '<option value="' + nota + '">' + nota + ' ' + estrelas(nota) + '</option>')
+                .join('')
+        }
+
+        function atualizarPreviaNota(select, pontoId) {
+            const preview = document.getElementById('nota-preview-' + pontoId)
+            if (!preview) return
+            const nota = parseInt(select.value)
+            preview.textContent = nota ? estrelas(nota) : ''
+        }
+
+        async function alternarSalvos() {
+            mostrandoSalvos = !mostrandoSalvos
+            document.getElementById('btn-salvos').textContent = mostrandoSalvos ? 'Todos os pontos' : 'Meus salvos'
+            document.getElementById('busca').value = ''
+            buscaAtiva = false
+            carregarPontos()
+        }
+
+        async function alterarPontoSalvo(event, pontoId, salvar) {
+            event.stopPropagation()
+            if (!token) {
+                alert('Faca login para salvar pontos.')
+                window.location.href = '/login'
+                return
+            }
+            const resposta = await fetch(`/pontos/${pontoId}/salvar`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert('Nao foi possivel atualizar seus pontos salvos.')
+            }
+        }
+
+        async function avaliarPonto(pontoId) {
+            if (!token) {
+                alert('Faça login para avaliar.')
+                window.location.href = '/login'
+                return
+            }
+            const nota = document.getElementById('nota-' + pontoId).value
+            const comentario = document.getElementById('comentario-' + pontoId).value
+
+            if (!nota) { alert('Selecione uma nota.'); return }
+
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ nota: parseInt(nota), comentario: comentario || null })
+            })
+
+            const resultado = await resposta.json()
+            if (resposta.ok) {
+                alert('Avaliação enviada! Se já havia avaliado, ela foi atualizada.')
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert(resultado.detail || 'Erro ao avaliar.')
+            }
+        }
+
+        async function apagarAvaliacao(pontoId, avaliacaoId) {
+            if (!confirm('Apagar esta avaliação?')) return
+            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (resposta.ok) {
+                alert('Avaliação apagada.')
+                carregarPontos(document.getElementById('busca').value.trim())
+            } else {
+                alert('Erro ao apagar avaliação.')
+            }
+        }
+
+        async function carregarPontos(busca = '') {
+            const lista = document.getElementById('lista-pontos')
+            const statusEl = document.getElementById('status')
+            lista.innerHTML = ''
+            statusEl.textContent = 'Carregando pontos...'
+
+            try {
+                const params = new URLSearchParams()
+                if (busca) params.set('busca', busca)
+                params.set('ordenar', document.getElementById('ordenar').value)
+
+                const categoria = document.getElementById('filtro-categoria').value
+                if (categoria) params.set('categoria', categoria)
+
+                const url = mostrandoSalvos ? '/pontos/salvos/me' : `/pontos?${params.toString()}`
+                const resposta = await fetch(url, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                })
+                const pontos = await resposta.json()
+                if (!resposta.ok) {
+                    statusEl.textContent = pontos.detail || 'Erro ao carregar pontos.'
+                    return
+                }
+                if (pontos.length === 0) {
+                    statusEl.textContent = mostrandoSalvos ? 'Voce ainda nao salvou nenhum ponto turistico.' : 'Nenhum ponto turistico encontrado.'
+                    return
+                }
+
+                statusEl.textContent = mostrandoSalvos ? `${pontos.length} ponto(s) salvo(s).` : (buscaAtiva ? `${pontos.length} ponto(s) encontrado(s).` : '')
+
+                pontos.forEach(ponto => {
+                    const item = document.createElement('article')
+                    item.className = 'card'
+                    item.style.cursor = 'pointer'
+                    item.onclick = () => window.location.href = `/ponto/${ponto.id}`
+
+                    const blocoAvaliacao = token
+                        ? '<div class="avaliacao-box">' +
+                            '<strong>Avaliar:</strong>' +
+                            '<select id="nota-' + ponto.id + '">' +
+                                '<option value="">-- Nota --</option>' +
+                                '<option value="1">1 ⭐</option>' +
+                                '<option value="2">2 ⭐</option>' +
+                                '<option value="3">3 ⭐</option>' +
+                                '<option value="4">4 ⭐</option>' +
+                                '<option value="5">5 ⭐</option>' +
+                            '</select>' +
+                            '<input type="text" id="comentario-' + ponto.id + '" placeholder="Comentário (opcional)">' +
+                            '<button onclick="avaliarPonto(' + ponto.id + ')">Enviar</button>' +
+                            '<p style="font-size:12px;color:#64748b;margin:4px 0 0">Se já avaliou este ponto, sua nota anterior será substituída.</p>' +
+                          '</div>'
+                        : '<p style="margin-top:10px;font-size:13px"><a href="/login">Faça login para avaliar</a></p>'
+
+                    const bairroHtml = ponto.bairro ? ', ' + escaparHtml(ponto.bairro) : ''
+
+                    item.innerHTML =
+                        '<div class="card-img-wrap">' +
+                            (ponto.imagem_url
+                                ? '<img src="' + escaparHtml(ponto.imagem_url) + '" referrerpolicy="no-referrer" loading="lazy" alt="' + escaparHtml(ponto.nome) + '">'
+                                : '<div class="card-img-placeholder"></div>') +
+                        '</div>' +
+                        '<div class="card-content">' +
+                            '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
+                            '<p class="muted">' + escaparHtml(ponto.categoria) + ' &bull; ' + escaparHtml(ponto.cidade) + bairroHtml + '</p>' +
+                            '<p>' + escaparHtml(ponto.descricao) + '</p>' +
+                            '<p><strong>Avaliação:</strong> ' + ponto.media_avaliacoes + ' ⭐ (' + ponto.total_avaliacoes + ' avaliações)</p>' +
+                            (token
+                                ? '<div class="card-actions">' +
+                                    '<button onclick="alterarPontoSalvo(event, ' + ponto.id + ', ' + !ponto.salvo + ')">' +
+                                        (ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto') +
+                                    '</button>' +
+                                  '</div>'
+                                : '') +
+                            blocoAvaliacao +
+                        '</div>'
+
+                    const selectNota = item.querySelector('#nota-' + ponto.id)
+                    if (selectNota) {
+                        const previewNota = document.createElement('span')
+                        previewNota.id = 'nota-preview-' + ponto.id
+                        previewNota.className = 'nota-preview'
+                        previewNota.setAttribute('aria-live', 'polite')
+                        selectNota.innerHTML = '<option value="">-- Nota --</option>' + opcoesNota()
+                        selectNota.parentNode.insertBefore(previewNota, selectNota.nextSibling)
+                        selectNota.addEventListener('change', () => atualizarPreviaNota(selectNota, ponto.id))
+                    }
+
+                    item.querySelectorAll('button, select, input, a').forEach(controle => {
+                        controle.addEventListener('click', event => event.stopPropagation())
+                    })
+                    lista.appendChild(item)
+                })
+            } catch (erro) {
+                statusEl.textContent = 'Erro de conexão com o servidor.'
+            }
+        }
+
+        document.getElementById('form-busca').addEventListener('submit', function(event) {
+            event.preventDefault()
+            const termo = document.getElementById('busca').value.trim()
+            buscaAtiva = termo !== '' || document.getElementById('filtro-categoria').value !== ''
+            carregarPontos(termo)
+        })
+
+        document.getElementById('ordenar').addEventListener('change', function() {
+            carregarPontos(document.getElementById('busca').value.trim())
+        })
+
+        document.getElementById('filtro-categoria').addEventListener('change', function() {
+            buscaAtiva = true
+            carregarPontos(document.getElementById('busca').value.trim())
+        })
+
+        carregarPontos()
+    </script>
+</body>
+</html>
