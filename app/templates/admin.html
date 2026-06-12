@@ -97,7 +97,7 @@
         async function verificarAcessoAdmin() {
             try {
                 const resposta = await fetch('/auth/me', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': 'Bearer ' + token }
                 })
                 if (!resposta.ok) {
                     logout()
@@ -135,7 +135,7 @@
                 ...opcoes,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': 'Bearer ' + token,
                     ...(opcoes.headers || {})
                 }
             })
@@ -166,30 +166,28 @@
                 pontos.forEach(ponto => {
                     const card = document.createElement('article')
                     card.className = 'card'
-                    card.innerHTML = `
-                        <h3>${escaparHtml(ponto.nome)}</h3>
-                        <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
-                        <p>${escaparHtml(ponto.descricao)}</p>
-                        <div class="actions">
-                            <a href="/ponto/${ponto.id}">Ver detalhes</a>
-                            <button onclick="aprovarPonto(${ponto.id})">Aprovar</button>
-                            <button class="danger" onclick="rejeitarPonto(${ponto.id})">Rejeitar</button>
-                        </div>
-                    `
+                    card.innerHTML = '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
+                        '<p class="muted">' + escaparHtml(ponto.categoria) + ' • ' + escaparHtml(ponto.cidade) + (ponto.bairro ? ', ' + escaparHtml(ponto.bairro) : '') + '</p>' +
+                        '<p>' + escaparHtml(ponto.descricao) + '</p>' +
+                        '<div class="actions">' +
+                            '<a href="/ponto/' + ponto.id + '">Ver detalhes</a>' +
+                            '<button onclick="aprovarPonto(' + ponto.id + ')">Aprovar</button>' +
+                            '<button class="danger" onclick="rejeitarPonto(' + ponto.id + ')">Rejeitar</button>' +
+                        '</div>'
                     container.appendChild(card)
                 })
             } catch (erro) {
-                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+                container.innerHTML = '<p>' + escaparHtml(erro.message) + '</p>'
             }
         }
 
         async function aprovarPonto(id) {
-            await api(`/pontos/${id}/aprovar`, { method: 'PATCH' })
+            await api('/pontos/' + id + '/aprovar', { method: 'PATCH' })
             carregarPontosPendentes()
         }
 
         async function rejeitarPonto(id) {
-            await api(`/pontos/${id}/rejeitar`, { method: 'PATCH' })
+            await api('/pontos/' + id + '/rejeitar', { method: 'PATCH' })
             carregarPontosPendentes()
         }
 
@@ -197,7 +195,7 @@
             const campos = ['nome', 'descricao', 'categoria', 'cidade', 'bairro', 'endereco', 'imagem_url']
             return campos
                 .filter(campo => dados[campo] !== undefined && dados[campo] !== null && dados[campo] !== '')
-                .map(campo => `<p><strong>${campo}:</strong> ${escaparHtml(String(dados[campo]))}</p>`)
+                .map(campo => '<p><strong>' + campo + ':</strong> ' + escaparHtml(String(dados[campo])) + '</p>')
                 .join('') || '<p class="muted">Sem campos alterados.</p>'
         }
 
@@ -217,30 +215,28 @@
                     const ponto = edicao.ponto
                     const card = document.createElement('article')
                     card.className = 'card'
-                    card.innerHTML = `
-                        <h3>${escaparHtml(ponto.nome)}</h3>
-                        <p class="muted">Solicitado por usuario #${edicao.solicitado_por_id}</p>
-                        ${resumoEdicao(edicao.dados || {})}
-                        <div class="actions">
-                            <a href="/ponto/${ponto.id}">Ver versao atual</a>
-                            <button onclick="aprovarEdicao(${ponto.id})">Aprovar edicao</button>
-                            <button class="danger" onclick="rejeitarEdicao(${ponto.id})">Rejeitar edicao</button>
-                        </div>
-                    `
+                    card.innerHTML = '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
+                        '<p class="muted">Solicitado por usuario #' + edicao.solicitado_por_id + '</p>' +
+                        resumoEdicao(edicao.dados || {}) +
+                        '<div class="actions">' +
+                            '<a href="/ponto/' + ponto.id + '">Ver versao atual</a>' +
+                            '<button onclick="aprovarEdicao(' + ponto.id + ')">Aprovar edicao</button>' +
+                            '<button class="danger" onclick="rejeitarEdicao(' + ponto.id + ')">Rejeitar edicao</button>' +
+                        '</div>'
                     container.appendChild(card)
                 })
             } catch (erro) {
-                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+                container.innerHTML = '<p>' + escaparHtml(erro.message) + '</p>'
             }
         }
 
         async function aprovarEdicao(id) {
-            await api(`/admin/api/edicoes-pendentes/${id}/aprovar`, { method: 'PATCH' })
+            await api('/admin/api/edicoes-pendentes/' + id + '/aprovar', { method: 'PATCH' })
             carregarEdicoesPendentes()
         }
 
         async function rejeitarEdicao(id) {
-            await api(`/admin/api/edicoes-pendentes/${id}/rejeitar`, { method: 'PATCH' })
+            await api('/admin/api/edicoes-pendentes/' + id + '/rejeitar', { method: 'PATCH' })
             carregarEdicoesPendentes()
         }
 
@@ -266,25 +262,23 @@
                 comentarios.forEach(({ ponto, avaliacao }) => {
                     const card = document.createElement('article')
                     card.className = 'card'
-                    card.innerHTML = `
-                        <h3>${escaparHtml(ponto.nome)}</h3>
-                        <p class="muted">Nota ${avaliacao.nota}/5 - Usuario #${avaliacao.usuario_id}</p>
-                        <p>${escaparHtml(avaliacao.comentario || '(sem comentario)')}</p>
-                        <div class="actions">
-                            <a href="/ponto/${ponto.id}">Ver ponto</a>
-                            <button class="danger" onclick="apagarComentario(${ponto.id}, ${avaliacao.id})">Apagar comentario</button>
-                        </div>
-                    `
+                    card.innerHTML = '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
+                        '<p class="muted">Nota ' + avaliacao.nota + '/5 - Usuario #' + avaliacao.usuario_id + '</p>' +
+                        '<p>' + escaparHtml(avaliacao.comentario || '(sem comentario)') + '</p>' +
+                        '<div class="actions">' +
+                            '<a href="/ponto/' + ponto.id + '">Ver ponto</a>' +
+                            '<button class="danger" onclick="apagarComentario(' + ponto.id + ', ' + avaliacao.id + ')">Apagar comentario</button>' +
+                        '</div>'
                     container.appendChild(card)
                 })
             } catch (erro) {
-                container.innerHTML = `<p>${escaparHtml(erro.message)}</p>`
+                container.innerHTML = '<p>' + escaparHtml(erro.message) + '</p>'
             }
         }
 
         async function apagarComentario(pontoId, avaliacaoId) {
             if (!confirm('Apagar este comentario?')) return
-            await api(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, { method: 'DELETE' })
+            await api('/pontos/' + pontoId + '/avaliacoes/' + avaliacaoId, { method: 'DELETE' })
             carregarComentarios()
         }
 
@@ -299,21 +293,19 @@
                     const tr = document.createElement('tr')
                     const proximoTipo = usuario.tipo === 'admin' ? 'comum' : 'admin'
                     const textoAcao = usuario.tipo === 'admin' ? 'Remover admin' : 'Tornar admin'
-                    tr.innerHTML = `
-                        <td>${escaparHtml(usuario.nome)}</td>
-                        <td>${escaparHtml(usuario.email)}</td>
-                        <td>${escaparHtml(usuario.tipo)}</td>
-                        <td><button class="secondary" onclick="alterarTipoUsuario(${usuario.id}, '${proximoTipo}')">${textoAcao}</button></td>
-                    `
+                    tr.innerHTML = '<td>' + escaparHtml(usuario.nome) + '</td>' +
+                        '<td>' + escaparHtml(usuario.email) + '</td>' +
+                        '<td>' + escaparHtml(usuario.tipo) + '</td>' +
+                        '<td><button class="secondary" onclick="alterarTipoUsuario(' + usuario.id + ', \'' + proximoTipo + '\')">' + textoAcao + '</button></td>'
                     tbody.appendChild(tr)
                 })
             } catch (erro) {
-                tbody.innerHTML = `<tr><td colspan="4">${escaparHtml(erro.message)}</td></tr>`
+                tbody.innerHTML = '<tr><td colspan="4">' + escaparHtml(erro.message) + '</td></tr>'
             }
         }
 
         async function alterarTipoUsuario(id, tipo) {
-            await api(`/admin/api/usuarios/${id}/tipo`, {
+            await api('/admin/api/usuarios/' + id + '/tipo', {
                 method: 'PATCH',
                 body: JSON.stringify({ tipo })
             })

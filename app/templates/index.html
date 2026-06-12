@@ -63,15 +63,44 @@
             display: flex; flex-direction: row;
         }
         .card-img-wrap {
-            flex: 0 0 220px; max-width: 220px;
-            min-height: 150px; background: #c8e6c9; overflow: hidden;
+            flex: 0 0 220px;
+            max-width: 220px;
+            height: 180px;
+            background: #c8e6c9;
+            overflow: hidden;
         }
-        .card-img-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; background: #c8e6c9; }
-        .card-img-placeholder { width: 100%; height: 100%; min-height: 150px; background: #c8e6c9; }
-        .card-content { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .card h3 { margin: 0 0 6px; font-size: 17px; }
-        .muted { color: #64748b; font-size: 14px; }
-        .card p { margin: 6px 0; font-size: 14px; }
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #c8e6c9;
+        }
+        .card-img-placeholder {
+            width: 100%;
+            height: 100%;
+            min-height: unset;
+            background: #c8e6c9;
+        }
+        .card-content {
+            padding: 16px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card h3 {
+            margin: 0 0 6px;
+            font-size: 17px;
+        }
+        .muted {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .card p {
+            margin: 6px 0;
+            font-size: 14px;
+        }
 
         .avaliacao-box {
             margin-top: 14px;
@@ -214,13 +243,6 @@
                 .join('')
         }
 
-        function atualizarPreviaNota(select, pontoId) {
-            const preview = document.getElementById('nota-preview-' + pontoId)
-            if (!preview) return
-            const nota = parseInt(select.value)
-            preview.textContent = nota ? estrelas(nota) : ''
-        }
-
         async function alternarSalvos() {
             mostrandoSalvos = !mostrandoSalvos
             document.getElementById('btn-salvos').textContent = mostrandoSalvos ? 'Todos os pontos' : 'Meus salvos'
@@ -355,7 +377,9 @@
                             '<h3>' + escaparHtml(ponto.nome) + '</h3>' +
                             '<p class="muted">' + escaparHtml(ponto.categoria) + ' &bull; ' + escaparHtml(ponto.cidade) + bairroHtml + '</p>' +
                             '<p>' + escaparHtml(ponto.descricao) + '</p>' +
-                            '<p><strong>Avaliação:</strong> ' + ponto.media_avaliacoes + ' ⭐ (' + ponto.total_avaliacoes + ' avaliações)</p>' +
+                            '<p><strong>Avaliação média:</strong> ' +
+                            (ponto.media_avaliacoes != null && !isNaN(ponto.media_avaliacoes) ? ponto.media_avaliacoes + ' ⭐ (' + (ponto.total_avaliacoes || 0) + ' avaliação/avaliações)' : 'Sem avaliações') +
+                            '</p>' +
                             (token
                                 ? '<div class="card-actions">' +
                                     '<button onclick="alterarPontoSalvo(event, ' + ponto.id + ', ' + !ponto.salvo + ')">' +
@@ -374,7 +398,6 @@
                         previewNota.setAttribute('aria-live', 'polite')
                         selectNota.innerHTML = '<option value="">-- Nota --</option>' + opcoesNota()
                         selectNota.parentNode.insertBefore(previewNota, selectNota.nextSibling)
-                        selectNota.addEventListener('change', () => atualizarPreviaNota(selectNota, ponto.id))
                     }
 
                     item.querySelectorAll('button, select, input, a').forEach(controle => {

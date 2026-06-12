@@ -34,9 +34,35 @@
 
         .panel { background: white; border: 1px solid #d9e0ea; border-radius: 8px; overflow: hidden; margin-top: 18px; }
         .panel img { width: 100%; max-height: 360px; object-fit: contain; background: #eef7ef; }
-        .galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; padding: 8px; background: #eef7ef; }
-        .galeria img { height: 180px; max-height: 180px; border-radius: 6px; object-fit: contain; }
-        .content { padding: 18px; }
+
+        .imagem-capa {
+            width: 100%;
+            height: 350px;
+            overflow: hidden;
+            background: #eef7ef;
+        }
+        .imagem-capa img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .galeria {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            background: #eef7ef;
+        }
+        .galeria img {
+            height: 80px;
+            width: auto;
+            max-width: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .content { padding: 18px; }   /* ← Adicionado */
         .muted { color: #64748b; font-size: 14px; }
         .status-badge {
             display: inline-block; padding: 4px 10px;
@@ -76,7 +102,7 @@
     <header>
         <div class="header-brand">
             <span><a href="/" style="text-decoration:none;color:inherit;">TourCheck</a></span>
-            <img src="https://i.imgur.com/5WSo4a3.png" referrerpolicy="no-referrer" alt="TourCheck logo">        
+            <img src="https://i.imgur.com/5WSo4a3.png" referrerpolicy="no-referrer" alt="TourCheck logo">
         </div>
         <div class="header-actions">
             <span id="botoes-auth">
@@ -129,7 +155,7 @@
 
         function opcoesNota() {
             return [1, 2, 3, 4, 5]
-                .map(nota => `<option value="${nota}">${nota} ${estrelas(nota)}</option>`)
+                .map(nota => '<option value="' + nota + '">' + nota + ' ' + estrelas(nota) + '</option>')
                 .join('')
         }
 
@@ -147,9 +173,9 @@
 
         async function apagarAvaliacao(pontoId, avaliacaoId) {
             if (!confirm('Apagar esta avaliação?')) return
-            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes/${avaliacaoId}`, {
+            const resposta = await fetch('/pontos/' + pontoId + '/avaliacoes/' + avaliacaoId, {
                 method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': 'Bearer ' + token }
             })
             if (resposta.ok) {
                 alert('Avaliação apagada.')
@@ -170,11 +196,11 @@
 
             if (!nota) { alert('Selecione uma nota.'); return }
 
-            const resposta = await fetch(`/pontos/${pontoId}/avaliacoes`, {
+            const resposta = await fetch('/pontos/' + pontoId + '/avaliacoes', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': 'Bearer ' + token
                 },
                 body: JSON.stringify({ nota: parseInt(nota), comentario: comentario || null })
             })
@@ -198,9 +224,9 @@
                 window.location.href = '/login'
                 return
             }
-            const resposta = await fetch(`/pontos/${pontoId}/salvar`, {
+            const resposta = await fetch('/pontos/' + pontoId + '/salvar', {
                 method: salvar ? 'POST' : 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': 'Bearer ' + token }
             })
             if (resposta.ok) {
                 carregarPonto()
@@ -216,8 +242,8 @@
             const secaoAvaliacoes = document.getElementById('secao-avaliacoes')
 
             try {
-                const resposta = await fetch(`/pontos/${id}`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                const resposta = await fetch('/pontos/' + id, {
+                    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
                 })
                 const ponto = await resposta.json()
 
@@ -226,42 +252,54 @@
                     return
                 }
 
-                document.title = `${ponto.nome} - TourCheck`
+                document.title = ponto.nome + ' - TourCheck'
                 mensagem.style.display = 'none'
                 container.style.display = 'block'
 
                 const imagens = ponto.imagens_urls && ponto.imagens_urls.length ? ponto.imagens_urls : (ponto.imagem_url ? [ponto.imagem_url] : [])
-                container.innerHTML = `
-                    ${imagens.length
-                        ? `<div class="galeria">${imagens.map((url, indice) => `<img src="${escaparHtml(url)}" referrerpolicy="no-referrer" alt="${escaparHtml(ponto.nome)} ${indice + 1}">`).join('')}</div>`
-                        : ''
+
+                let htmlCapa = ''
+                let htmlMiniaturas = ''
+
+                if (imagens.length > 0) {
+                    htmlCapa = '<div class="imagem-capa">' +
+                            '<img src="' + escaparHtml(imagens[0]) + '" referrerpolicy="no-referrer" alt="' + escaparHtml(ponto.nome) + '">' +
+                            '</div>'
+
+                    if (imagens.length > 1) {
+                        htmlMiniaturas = '<div class="galeria">' +
+                                imagens.slice(1).map((url, indice) =>
+                                        '<img src="' + escaparHtml(url) + '" referrerpolicy="no-referrer" alt="' + escaparHtml(ponto.nome) + ' ' + (indice + 2) + '">'
+                                ).join('') +
+                                '</div>'
                     }
-                    <div class="content">
-                        <h1>${escaparHtml(ponto.nome)}</h1>
-                        <p class="muted">${escaparHtml(ponto.categoria)} • ${escaparHtml(ponto.cidade)}${ponto.bairro ? `, ${escaparHtml(ponto.bairro)}` : ''}</p>
-                        <p>${escaparHtml(ponto.descricao)}</p>
-                        ${ponto.endereco ? `<p><strong>Endereço:</strong> ${escaparHtml(ponto.endereco)}</p>` : ''}
-                        <p><strong>Avaliação média:</strong> ${ponto.media_avaliacoes} ⭐ (${ponto.total_avaliacoes} avaliação/avaliações)</p>
-                        ${token ? `
-                            <div class="actions">
-                                <button onclick="alterarPontoSalvo(${ponto.id}, ${!ponto.salvo})">
-                                    ${ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'}
-                                </button>
-                                <a class="button" href="/ponto_cadastro?editar=${ponto.id}">Editar ponto</a>
-                            </div>
-                        ` : ''}
-                        <span class="status-badge">Status: ${escaparHtml(ponto.status)}</span>
-                    </div>
-                `
+                }
+
+                // Definição de htmlAcoes (estava faltando)
+                let htmlAcoes = ''
+                if (token) {
+                    const textoBotao = ponto.salvo ? 'Remover dos salvos' : 'Salvar ponto'
+                    htmlAcoes = '<div class="actions"><button onclick="alterarPontoSalvo(' + ponto.id + ', ' + (!ponto.salvo) + ')">' + textoBotao + '</button> <a class="button" href="/ponto_cadastro?editar=' + ponto.id + '">Editar ponto</a></div>'
+                }
+
+                container.innerHTML = htmlCapa + htmlMiniaturas +
+                    '<div class="content">' +
+                        '<h1>' + escaparHtml(ponto.nome) + '</h1>' +
+                        '<p class="muted">' + escaparHtml(ponto.categoria) + ' • ' + escaparHtml(ponto.cidade) + (ponto.bairro ? ', ' + escaparHtml(ponto.bairro) : '') + '</p>' +
+                        '<p>' + escaparHtml(ponto.descricao) + '</p>' +
+                        (ponto.endereco ? '<p><strong>Endereço:</strong> ' + escaparHtml(ponto.endereco) + '</p>' : '') +
+                        '<p><strong>Avaliação média:</strong> ' + ponto.media_avaliacoes + ' ⭐ (' + ponto.total_avaliacoes + ' avaliação/avaliações)</p>' +
+                        htmlAcoes +
+                        '<span class="status-badge">Status: ' + escaparHtml(ponto.status) + '</span>' +
+                    '</div>'
 
                 // ── Seção de avaliações ──────────────────────────
                 secaoAvaliacoes.style.display = 'block'
                 secaoAvaliacoes.innerHTML = ''
 
-                // Lista de comentários existentes
                 const divComentarios = document.createElement('div')
                 divComentarios.className = 'comentarios'
-                divComentarios.innerHTML = `<h3>Comentários (${ponto.avaliacoes.length})</h3>`
+                divComentarios.innerHTML = '<h3>Comentários (' + ponto.avaliacoes.length + ')</h3>'
 
                 if (ponto.avaliacoes.length === 0) {
                     divComentarios.innerHTML += '<p class="muted">Nenhum comentário ainda.</p>'
@@ -269,41 +307,34 @@
                     ponto.avaliacoes.forEach(av => {
                         const item = document.createElement('div')
                         item.className = 'comentario-item'
-                        item.innerHTML = `
-                            <div>
-                                <div class="meta">${escaparHtml(av.usuario_nome || ('Usuario ' + av.usuario_id))} - ${formatarData(av.criado_em)}</div>
-                                <div class="nota">${estrelas(av.nota)} (${av.nota}/5)</div>
-                                <div class="texto">${escaparHtml(av.comentario || '(sem comentário)')}</div>
-                            </div>
-                            ${isAdmin
-                                ? `<button class="danger" onclick="apagarAvaliacao(${ponto.id}, ${av.id})">🗑 Apagar</button>`
-                                : ''
-                            }
-                        `
+                        item.innerHTML = '<div>' +
+                            '<div class="meta">' + escaparHtml(av.usuario_nome || ('Usuario ' + av.usuario_id)) + ' - ' + formatarData(av.criado_em) + '</div>' +
+                            '<div class="nota">' + estrelas(av.nota) + ' (' + av.nota + '/5)</div>' +
+                            '<div class="texto">' + escaparHtml(av.comentario || '(sem comentário)') + '</div>' +
+                        '</div>' +
+                        (isAdmin ? '<button class="danger" onclick="apagarAvaliacao(' + ponto.id + ', ' + av.id + ')">🗑 Apagar</button>' : '')
                         divComentarios.appendChild(item)
                     })
                 }
                 secaoAvaliacoes.appendChild(divComentarios)
 
-                // Formulário de avaliação — só para logados
+                // Formulário de avaliação
                 if (token && ponto.status === 'aprovado') {
                     const divForm = document.createElement('div')
                     divForm.className = 'avaliacao-box'
-                    divForm.innerHTML = `
-                        <h3>Deixar avaliação</h3>
-                        <p class="muted" style="margin:0 0 10px">Se já avaliou este ponto, sua nota anterior será substituída.</p>
-                        <select id="nota-input">
-                            <option value="">-- Nota --</option>
-                            <option value="1">1 ⭐</option>
-                            <option value="2">2 ⭐</option>
-                            <option value="3">3 ⭐</option>
-                            <option value="4">4 ⭐</option>
-                            <option value="5">5 ⭐</option>
-                        </select>
-                        <input type="text" id="comentario-input" placeholder="Comentário (opcional)">
-                        <button onclick="avaliarPonto(${ponto.id})">Enviar</button>
-                        <p id="mensagem-avaliacao"></p>
-                    `
+                    divForm.innerHTML = '<h3>Deixar avaliação</h3>' +
+                        '<p class="muted" style="margin:0 0 10px">Se já avaliou este ponto, sua nota anterior será substituída.</p>' +
+                        '<select id="nota-input">' +
+                            '<option value="">-- Nota --</option>' +
+                            '<option value="1">1 ⭐</option>' +
+                            '<option value="2">2 ⭐</option>' +
+                            '<option value="3">3 ⭐</option>' +
+                            '<option value="4">4 ⭐</option>' +
+                            '<option value="5">5 ⭐</option>' +
+                        '</select>' +
+                        '<input type="text" id="comentario-input" placeholder="Comentário (opcional)">' +
+                        '<button onclick="avaliarPonto(' + ponto.id + ')">Enviar</button>' +
+                        '<p id="mensagem-avaliacao"></p>'
                     secaoAvaliacoes.appendChild(divForm)
                     const selectNota = document.getElementById('nota-input')
                     const previewNota = document.createElement('span')
