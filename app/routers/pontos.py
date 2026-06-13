@@ -279,6 +279,17 @@ def salvar_ponto(
         .first()
     )
 
+    if using_mongodb():
+        db.salvar_ponto(usuario.id, ponto.id)
+        return montar_ponto_response(ponto, salvo=True)
+
+    if ponto_salvo is None:
+        db.add(PontoSalvo(usuario_id=usuario.id, ponto_id=ponto.id))
+        db.commit()
+        db.refresh(ponto)
+
+    return montar_ponto_response(ponto, salvo=True)
+
 
 @router.post("/imagens", status_code=status.HTTP_201_CREATED)
 async def enviar_imagens_ponto(
@@ -321,16 +332,6 @@ async def enviar_imagens_ponto(
         urls.append(f"/uploads/{nome_arquivo}")
 
     return {"imagens_urls": urls}
-    if using_mongodb():
-        db.salvar_ponto(usuario.id, ponto.id)
-        return montar_ponto_response(ponto, salvo=True)
-
-    if ponto_salvo is None:
-        db.add(PontoSalvo(usuario_id=usuario.id, ponto_id=ponto.id))
-        db.commit()
-        db.refresh(ponto)
-
-    return montar_ponto_response(ponto, salvo=True)
 
 
 @router.delete("/{ponto_id}/salvar", status_code=status.HTTP_204_NO_CONTENT)
@@ -452,13 +453,14 @@ def apagar_avaliacao(
     ponto_id: int,
     avaliacao_id: int,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(exigir_admin),
+    usuario: Usuario = Depends(obter_usuario_atual),
 ):
     if using_mongodb():
-        if not db.apagar_avaliacao(ponto_id, avaliacao_id):
+        usuario_id = None if usuario.tipo == TipoUsuario.ADMIN else usuario.id
+        if not db.apagar_avaliacao(ponto_id, avaliacao_id, usuario_id):
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Avaliacao nao encontrada.",
+                status_code=status.HTTP_404_NOT_FOUND if usuario.tipo == TipoUsuario.ADMIN else status.HTTP_403_FORBIDDEN,
+                detail="Avaliacao nao encontrada." if usuario.tipo == TipoUsuario.ADMIN else "Voce nao pode apagar esta avaliacao.",
             )
         return None
 
@@ -471,6 +473,11 @@ def apagar_avaliacao(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Avaliacao nao encontrada.",
+        )
+    if usuario.tipo != TipoUsuario.ADMIN and avaliacao.usuario_id != usuario.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Voce nao pode apagar esta avaliacao.",
         )
     db.delete(avaliacao)
     db.commit()

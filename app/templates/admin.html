@@ -20,6 +20,8 @@
         .card h3 { margin: 0 0 8px; }
         .muted { color: #64748b; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .field-inline { display: flex; align-items: center; gap: 8px; }
         table { width: 100%; border-collapse: collapse; overflow: hidden; }
         th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
         tr:last-child td { border-bottom: 0; }
@@ -33,7 +35,7 @@
     </header>
 
     <main>
-        <h1>Administracao</h1>
+        <h1>Administração</h1>
         <p id="mensagem">Validando acesso...</p>
 
         <section id="primeiro-admin" class="section card" style="display:none">
@@ -57,12 +59,21 @@
             </div>
 
             <div class="section">
-                <h2>Comentarios</h2>
+                <div class="section-header">
+                    <h2>Comentários</h2>
+                    <label class="field-inline">
+                        <span class="muted">Ordenar por data</span>
+                        <select id="ordem-comentarios" onchange="carregarComentarios()">
+                            <option value="desc">Mais recentes</option>
+                            <option value="asc">Mais antigos</option>
+                        </select>
+                    </label>
+                </div>
                 <div id="comentarios" class="grid"></div>
             </div>
 
             <div class="section">
-                <h2>Usuarios</h2>
+                <h2>Usuários</h2>
                 <table>
                     <thead>
                         <tr>
@@ -91,6 +102,7 @@
         function logout() {
             localStorage.removeItem('access_token')
             localStorage.removeItem('tipo_usuario')
+            localStorage.removeItem('usuario_id')
             window.location.href = '/login'
         }
 
@@ -128,6 +140,13 @@
             const div = document.createElement('div')
             div.textContent = valor || ''
             return div.innerHTML
+        }
+
+        function formatarData(valor) {
+            if (!valor) return 'Data não informada'
+            const data = new Date(valor)
+            if (Number.isNaN(data.getTime())) return 'Data não informada'
+            return data.toLocaleString('pt-BR')
         }
 
         async function api(url, opcoes = {}) {
@@ -256,6 +275,12 @@
                         comentarios.push({ ponto, avaliacao })
                     })
                 })
+                const ordem = document.getElementById('ordem-comentarios').value
+                comentarios.sort((a, b) => {
+                    const dataA = new Date(a.avaliacao.criado_em || 0).getTime()
+                    const dataB = new Date(b.avaliacao.criado_em || 0).getTime()
+                    return ordem === 'asc' ? dataA - dataB : dataB - dataA
+                })
 
                 if (comentarios.length === 0) {
                     container.innerHTML = '<p class="muted">Nenhum comentario cadastrado.</p>'
@@ -269,6 +294,7 @@
                     card.innerHTML = `
                         <h3>${escaparHtml(ponto.nome)}</h3>
                         <p class="muted">Nota ${avaliacao.nota}/5 - Usuario #${avaliacao.usuario_id}</p>
+                        <p class="muted">${escaparHtml(formatarData(avaliacao.criado_em))}</p>
                         <p>${escaparHtml(avaliacao.comentario || '(sem comentario)')}</p>
                         <div class="actions">
                             <a href="/ponto/${ponto.id}">Ver ponto</a>

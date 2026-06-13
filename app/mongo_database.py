@@ -10,6 +10,20 @@ from app.models.ponto import StatusPonto
 from app.models.usuario import TipoTelefone, TipoUsuario
 
 
+PONTO_CAMPOS_EDITAVEIS = {
+    "nome",
+    "descricao",
+    "categoria",
+    "cidade",
+    "bairro",
+    "endereco",
+    "latitude",
+    "longitude",
+    "imagem_url",
+    "imagens_urls",
+}
+
+
 def _enum_value(value: Any) -> Any:
     return value.value if hasattr(value, "value") else value
 
@@ -95,6 +109,11 @@ class MongoDatabase:
     def _ponto_view(self, doc: dict[str, Any] | None) -> SimpleNamespace | None:
         if doc is None:
             return None
+        edicao_pendente = doc.get("edicao_pendente")
+        if isinstance(edicao_pendente, dict):
+            versao_aprovada = edicao_pendente.get("versao_aprovada")
+            if isinstance(versao_aprovada, dict):
+                doc = {**doc, **versao_aprovada}
         avaliacoes = doc.get("avaliacoes", [])
         usuarios_ids = {
             avaliacao.get("usuario_id")
@@ -166,12 +185,22 @@ class MongoDatabase:
 
     def solicitar_edicao_ponto(self, ponto_id: int, atualizacoes: dict[str, Any], usuario_id: int) -> SimpleNamespace | None:
         dados = {campo: _enum_value(valor) for campo, valor in atualizacoes.items()}
+        doc_atual = self.pontos.find_one({"id": ponto_id})
+        if doc_atual is None:
+            return None
+        edicao_atual = doc_atual.get("edicao_pendente")
+        versao_aprovada = (
+            edicao_atual.get("versao_aprovada")
+            if isinstance(edicao_atual, dict) and isinstance(edicao_atual.get("versao_aprovada"), dict)
+            else {campo: doc_atual.get(campo) for campo in PONTO_CAMPOS_EDITAVEIS if campo in doc_atual}
+        )
         self.pontos.update_one(
             {"id": ponto_id},
             {
                 "$set": {
                     "edicao_pendente": {
                         "dados": dados,
+                        "versao_aprovada": versao_aprovada,
                         "solicitado_por_id": usuario_id,
                         "solicitado_em": datetime.utcnow(),
                     }
@@ -207,7 +236,11 @@ class MongoDatabase:
         doc = self.pontos.find_one({"id": ponto_id, "edicao_pendente": {"$exists": True}})
         if doc is None:
             return None
-        self.pontos.update_one({"id": ponto_id}, {"$unset": {"edicao_pendente": ""}})
+        versao_aprovada = doc.get("edicao_pendente", {}).get("versao_aprovada", {})
+        update: dict[str, Any] = {"$unset": {"edicao_pendente": ""}}
+        if versao_aprovada:
+            update["$set"] = versao_aprovada
+        self.pontos.update_one({"id": ponto_id}, update)
         return self.ponto_by_id(ponto_id)
 
     def salvos_ids_usuario(self, usuario_id: int) -> set[int]:
@@ -262,9 +295,22 @@ class MongoDatabase:
         )
         return SimpleNamespace(**atualizado["avaliacoes"][0])
 
-    def apagar_avaliacao(self, ponto_id: int, avaliacao_id: int) -> bool:
+    def apagar_avaliacao(self, ponto_id: int, avaliacao_id: int, usuario_id: int | None = None) -> bool:
+        filtro: dict[str, Any] = (
+            {"id": ponto_id, "avaliacoes.id": avaliacao_id}
+            if usuario_id is None
+            else {
+                "id": ponto_id,
+                "avaliacoes": {
+                    "$elemMatch": {
+                        "id": avaliacao_id,
+                        "usuario_id": usuario_id,
+                    }
+                },
+            }
+        )
         resultado = self.pontos.update_one(
-            {"id": ponto_id, "avaliacoes.id": avaliacao_id},
+            filtro,
             {"$pull": {"avaliacoes": {"id": avaliacao_id}}},
         )
         return resultado.modified_count > 0

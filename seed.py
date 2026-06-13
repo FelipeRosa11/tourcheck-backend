@@ -15,7 +15,7 @@ from app.security import gerar_hash_senha
 PONTOS_DATA = [
     {
         "nome": "Cristo Redentor",
-        "descricao": "Estatua iconica no topo do Corcovado, com vista panoramica do Rio de Janeiro.",
+        "descricao": "Estatua icônica no topo do Corcovado, com vista panoramica do Rio de Janeiro.",
         "categoria": "Monumento",
         "cidade": "Rio de Janeiro",
         "bairro": "Santa Teresa",
@@ -25,7 +25,7 @@ PONTOS_DATA = [
         "imagem_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Christ_the_Redeemer_-_Cristo_Redentor.jpg",
     },
     {
-        "nome": "Pao de Acucar",
+        "nome": "Pão de Açucar",
         "descricao": "Morro com vista panoramica da Baia de Guanabara, acessivel por bondinho.",
         "categoria": "Natureza",
         "cidade": "Rio de Janeiro",
@@ -37,7 +37,7 @@ PONTOS_DATA = [
     },
     {
         "nome": "Jardim Botanico",
-        "descricao": "Area verde historica com palmeiras imperiais, estufas, lagos e colecoes botanicas.",
+        "descricao": "Área verde historica com palmeiras imperiais, estufas, lagos e colecoes botanicas.",
         "categoria": "Parque",
         "cidade": "Rio de Janeiro",
         "bairro": "Jardim Botanico",
@@ -70,7 +70,7 @@ PONTOS_DATA = [
     },
     {
         "nome": "Arcos da Lapa",
-        "descricao": "Aqueduto historico do seculo XVIII e um dos simbolos arquitetonicos do centro carioca.",
+        "descricao": "Aqueduto histórico do seculo XVIII e um dos simbolos arquitetônicos do centro carioca.",
         "categoria": "Historico",
         "cidade": "Rio de Janeiro",
         "bairro": "Lapa",
@@ -80,7 +80,7 @@ PONTOS_DATA = [
         "imagem_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/2018_Rio_de_Janeiro_-_Aqueduto_da_Carioca.jpg/3840px-2018_Rio_de_Janeiro_-_Aqueduto_da_Carioca.jpg",
     },
     {
-        "nome": "Museu do Amanha",
+        "nome": "Museu do Amanhã",
         "descricao": "Museu de ciencias aplicadas com exposicoes sobre sustentabilidade e futuros possiveis.",
         "categoria": "Museu",
         "cidade": "Rio de Janeiro",
@@ -102,8 +102,8 @@ PONTOS_DATA = [
         "imagem_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Pra%C3%A7a_Muhammad_Ali.jpg/3840px-Pra%C3%A7a_Muhammad_Ali.jpg",
     },
     {
-        "nome": "Maracana",
-        "descricao": "Estadio historico do futebol brasileiro, palco de grandes partidas e eventos.",
+        "nome": "Maracanã",
+        "descricao": "Estádio historico do futebol brasileiro, palco de grandes partidas e eventos.",
         "categoria": "Esporte",
         "cidade": "Rio de Janeiro",
         "bairro": "Maracana",
@@ -114,7 +114,7 @@ PONTOS_DATA = [
     },
     {
         "nome": "Praia de Copacabana",
-        "descricao": "Praia famosa pelo calcadao em ondas, quiosques e paisagem urbana classica.",
+        "descricao": "Praia famosa pelo calcadao em ondas, quiosques e paisagem urbana clássica.",
         "categoria": "Praia",
         "cidade": "Rio de Janeiro",
         "bairro": "Copacabana",
