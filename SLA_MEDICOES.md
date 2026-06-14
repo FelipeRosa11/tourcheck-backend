@@ -191,19 +191,39 @@ O ganho mais claro ocorreu nas latências: a latência média caiu de 121,4ms pa
 
 ---
 
-## 5. Gráficos medições 2
+5. Gráficos Comparativos (Curvas Sobrepostas)
 
-### 5.1 Cadastro de Usuários
+Em conformidade com o feedback do professor Fabrício Pereira, as análises visuais foram unificadas utilizando o recurso de comparação do Grafana Cloud. Abaixo, as curvas da Medição 1 (linhas sólidas) e da Medição 2 (linhas tracejadas) estão sobrepostas em um mesmo plano cartesiano por serviço para fins de comparação direta.
+
+### 5.1 Cadastro de Usuários (`POST /auth/cadastro`)
+O gráfico sobreposto exibe o comportamento da métrica `http_req_duration` sob concorrência. A sobreposição evidencia a rampa sutil de degradação da CPU-Bound à medida que os estágios em degraus avançam e saturam o hardware local de forma controlada.
+
+![Gráfico comparativo sobreposto do cadastro de usuários](<<img width="1498" height="593" alt="Captura de tela 2026-06-14 152758" src="https://github.com/user-attachments/assets/b225170b-cb46-42ce-b540-970ddbe07002" />
+>
+)
+
+### 5.2 Listagem Pública de Pontos Turísticos (`GET /pontos`)
+Gráfico unificado gerado pela ferramenta de comparação nativa do K6. As linhas sólidas (antes da otimização) mostram um pico de latência instável de 410ms. As linhas tracejadas (após a paginação) provam o achatamento total do tempo de resposta para 29ms, mantendo estabilidade linear mesmo sob a rampa de 100 VUs simultâneos.
+
+![Gráfico comparativo sobreposto da busca de pontos](<<img width="1492" height="593" alt="Captura de tela 2026-06-14 152917" src="https://github.com/user-attachments/assets/62e54652-1df9-4eae-9974-b96927eb4420" />
+>
+)
+
+* **Link de Comparação Dinâmica Unificada na Nuvem:** [Painel Comparativo Oficial - Grafana Cloud](https://feliperosamartins1111.grafana.net/a/k6-app/runs/compare)
+
+## 6. Gráficos medições 2
+
+### 6.1 Cadastro de Usuários
 
 <img width="1487" height="548" alt="image" src="https://github.com/user-attachments/assets/e748012d-c2b1-45da-8fe7-417d839f95db" />
 
-### 5.2 Listagem Pública de Pontos Turísticos
+### 6.2 Listagem Pública de Pontos Turísticos
 
 <img width="1492" height="466" alt="image" src="https://github.com/user-attachments/assets/e255bb93-ff1b-40da-9564-c169743b5933" />
 
 ---
 
-## 6. Quadro Consolidado de Evolução
+## 7. Quadro Consolidado de Evolução
 
 | Serviço | Medição 1 | Otimização aplicada | Medição 2 |
 | --- | --- | --- | --- |
@@ -212,7 +232,7 @@ O ganho mais claro ocorreu nas latências: a latência média caiu de 121,4ms pa
 
 ---
 
-## 7. Verificação de Coerência
+## 8. Verificação de Coerência
 
 Os resultados das duas medições estão coerentes com os gargalos identificados:
 
@@ -224,7 +244,7 @@ Os resultados das duas medições estão coerentes com os gargalos identificados
 
 ---
 
-## 8. Conclusão Técnica
+## 9. Conclusão Técnica
 
 A execução da segunda medição validou as duas linhas de otimização analisadas no ecossistema do TourCheck.
 
