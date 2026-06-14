@@ -198,15 +198,13 @@ Em conformidade com o feedback do professor Fabrício Pereira, as análises visu
 ### 5.1 Cadastro de Usuários (`POST /auth/cadastro`)
 O gráfico sobreposto exibe o comportamento da métrica `http_req_duration` sob concorrência. A sobreposição evidencia a rampa sutil de degradação da CPU-Bound à medida que os estágios em degraus avançam e saturam o hardware local de forma controlada.
 
-![Gráfico comparativo sobreposto do cadastro de usuários](<<img width="1498" height="593" alt="Captura de tela 2026-06-14 152758" src="https://github.com/user-attachments/assets/b225170b-cb46-42ce-b540-970ddbe07002" />
->
+[Gráfico comparativo sobreposto do cadastro de usuários](<img width="1498" height="593" alt="Captura de tela 2026-06-14 152758" src="https://github.com/user-attachments/assets/b225170b-cb46-42ce-b540-970ddbe07002" />
 )
 
 ### 5.2 Listagem Pública de Pontos Turísticos (`GET /pontos`)
 Gráfico unificado gerado pela ferramenta de comparação nativa do K6. As linhas sólidas (antes da otimização) mostram um pico de latência instável de 410ms. As linhas tracejadas (após a paginação) provam o achatamento total do tempo de resposta para 29ms, mantendo estabilidade linear mesmo sob a rampa de 100 VUs simultâneos.
 
-![Gráfico comparativo sobreposto da busca de pontos](<<img width="1492" height="593" alt="Captura de tela 2026-06-14 152917" src="https://github.com/user-attachments/assets/62e54652-1df9-4eae-9974-b96927eb4420" />
->
+[Gráfico comparativo sobreposto da busca de pontos](<img width="1492" height="593" alt="Captura de tela 2026-06-14 152917" src="https://github.com/user-attachments/assets/62e54652-1df9-4eae-9974-b96927eb4420" />
 )
 
 * **Link de Comparação Dinâmica Unificada na Nuvem:** [Painel Comparativo Oficial - Grafana Cloud](https://feliperosamartins1111.grafana.net/a/k6-app/runs/compare)
